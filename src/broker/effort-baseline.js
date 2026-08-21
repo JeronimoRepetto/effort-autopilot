@@ -38,7 +38,7 @@ export function resolveSessionEffortBaseline({
     try {
       // Windows editors and PowerShell commonly write settings with a UTF-8
       // BOM, which JSON.parse rejects.
-      parsed = JSON.parse(readFile(candidate.file).replace(/^﻿/, ""));
+      parsed = JSON.parse(readFile(candidate.file).replace(/^\uFEFF/, ""));
     } catch {
       continue;
     }

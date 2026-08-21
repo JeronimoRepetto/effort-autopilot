@@ -23,13 +23,9 @@ export function lowerOf(left, right) {
  * Claude's documented effort controls accept only the five effort
  * levels. An ultracode recommendation becomes xhigh, then respects the ceiling.
  */
-export function resolveExecutionPlan(
-  classification,
-  config = DEFAULT_SAVINGS_CONFIG,
-) {
+export function resolveExecutionPlan(classification, config = DEFAULT_SAVINGS_CONFIG) {
   const ceiling = config.ceiling ?? DEFAULT_SAVINGS_CONFIG.ceiling;
-  const baselineEffort =
-    config.baselineEffort ?? DEFAULT_SAVINGS_CONFIG.baselineEffort;
+  const baselineEffort = config.baselineEffort ?? DEFAULT_SAVINGS_CONFIG.baselineEffort;
   if (!isEffort(ceiling) || !isEffort(baselineEffort)) {
     throw new TypeError("invalid savings configuration");
   }
@@ -37,12 +33,8 @@ export function resolveExecutionPlan(
   const succeeded = classification?.status === "ok";
   const decision = succeeded ? classification.decision : null;
   const classifierTier = decision?.tier ?? "auto";
-  const requestedEffort = succeeded
-    ? decision.execution.claudeEffort
-    : baselineEffort;
-  const effectiveCandidate = isEffort(requestedEffort)
-    ? requestedEffort
-    : baselineEffort;
+  const requestedEffort = succeeded ? decision.execution.claudeEffort : baselineEffort;
+  const effectiveCandidate = isEffort(requestedEffort) ? requestedEffort : baselineEffort;
   const effort = lowerOf(effectiveCandidate, ceiling);
   const ultracodeSuppressed = classifierTier === "ultracode";
   const ceilingApplied = effort !== effectiveCandidate;

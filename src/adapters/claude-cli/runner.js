@@ -90,12 +90,13 @@ export function runClaudeProcess({ command, args, cwd, input, timeoutMs }) {
       if (timer) clearTimeout(timer);
       callback(value);
     };
-    const timer = Number.isFinite(timeoutMs) && timeoutMs > 0
-      ? setTimeout(() => {
-          child.kill();
-          finish(reject, new ClaudeExecutionError("execution-timeout"));
-        }, timeoutMs)
-      : null;
+    const timer =
+      Number.isFinite(timeoutMs) && timeoutMs > 0
+        ? setTimeout(() => {
+            child.kill();
+            finish(reject, new ClaudeExecutionError("execution-timeout"));
+          }, timeoutMs)
+        : null;
     const collect = (target) => (chunk) => {
       outputBytes += chunk.length;
       if (outputBytes > MAX_OUTPUT_BYTES) {
@@ -108,7 +109,8 @@ export function runClaudeProcess({ command, args, cwd, input, timeoutMs }) {
     child.stdout.on("data", collect(stdout));
     child.stderr.on("data", collect(stderr));
     child.on("error", (error) => {
-      finish(reject,
+      finish(
+        reject,
         new ClaudeExecutionError(
           error?.code === "ENOENT" ? "claude-not-found" : "process-start-failed",
         ),
@@ -151,10 +153,7 @@ export function isRateLimitFailure(payload, stderr = "", exitCode = 1) {
  * Execute one authenticated Claude Code CLI process. The prompt is supplied on
  * stdin so it does not appear in process arguments. There is no retry path.
  */
-export async function executeClaudeTask(
-  request,
-  { processRunner = runClaudeProcess } = {},
-) {
+export async function executeClaudeTask(request, { processRunner = runClaudeProcess } = {}) {
   const invocation = buildClaudeCliInvocation(request);
   const completed = await processRunner({
     ...invocation,

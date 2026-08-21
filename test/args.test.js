@@ -4,14 +4,17 @@ import test from "node:test";
 import { parseCliArgs } from "../src/cli/args.js";
 
 test("cross-platform arguments preserve Windows paths and spaced prompt parts", () => {
-  const parsed = parseCliArgs([
-    "--cwd",
-    "C:\\Users\\Example User\\project",
-    "--model-profile",
-    "C:\\Profiles\\sonnet.json",
-    "fix",
-    "the login bug",
-  ], {});
+  const parsed = parseCliArgs(
+    [
+      "--cwd",
+      "C:\\Users\\Example User\\project",
+      "--model-profile",
+      "C:\\Profiles\\sonnet.json",
+      "fix",
+      "the login bug",
+    ],
+    {},
+  );
   assert.equal(parsed.options.cwd, "C:\\Users\\Example User\\project");
   assert.equal(parsed.options.modelProfilePath, "C:\\Profiles\\sonnet.json");
   assert.deepEqual(parsed.promptParts, ["fix", "the login bug"]);
@@ -31,8 +34,5 @@ test("provider and model are untouched unless model is explicit", () => {
 });
 
 test("permission mode excludes model-based auto routing", () => {
-  assert.throws(
-    () => parseCliArgs(["--permission-mode", "auto", "hello"], {}),
-    /unsupported/,
-  );
+  assert.throws(() => parseCliArgs(["--permission-mode", "auto", "hello"], {}), /unsupported/);
 });

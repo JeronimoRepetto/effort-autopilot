@@ -110,7 +110,9 @@ export async function runPilotCli(
   );
   if (command === "status") {
     const state = JSON.parse(await readFile(resultsFile, "utf8"));
-    printSummary(summarizePilot(state, Math.min(options.maxRuns, manifest.tasks.length)), (value) => stdout.write(value));
+    printSummary(summarizePilot(state, Math.min(options.maxRuns, manifest.tasks.length)), (value) =>
+      stdout.write(value),
+    );
     return 0;
   }
 
@@ -128,7 +130,12 @@ export async function runPilotCli(
     manifest,
     cwd,
     resultsFile,
-    workspaceRoot: path.resolve(cwd, ".effort-autopilot", "evaluation-workspaces", manifest.benchmark),
+    workspaceRoot: path.resolve(
+      cwd,
+      ".effort-autopilot",
+      "evaluation-workspaces",
+      manifest.benchmark,
+    ),
     maxRuns: options.maxRuns,
     resume: command === "resume",
     mock,

@@ -55,7 +55,6 @@ let firstTicket = null;
 let authorizedReplayDecision = null;
 let guardInvocations = 0;
 let stage = "start";
-let completed = false;
 const server = await startBrokerIpcServer({
   ...identity,
   coordinator,
@@ -147,7 +146,6 @@ try {
     modelPromptSubmitted: false,
   };
   process.stdout.write(`${JSON.stringify(summary)}\n`);
-  completed = true;
   session.write("/exit");
   await new Promise((resolve) => setTimeout(resolve, 25));
   session.write(enterSequence);
@@ -161,7 +159,7 @@ try {
     .replaceAll(prompt, "[synthetic-prompt-redacted]")
     .replaceAll(identity.token, "[ipc-token-redacted]");
   process.stderr.write(`stage=${stage} ${error?.stack ?? error}\n${safeTail}\n`);
-  throw error;
+  process.exitCode = 1;
 } finally {
   session?.dispose();
   await server.close();
@@ -171,4 +169,4 @@ try {
 // node-pty can retain a native ConPTY handle after the diagnostic child exits.
 // All resources and temporary files are closed above, so terminate the isolated
 // diagnostic process explicitly instead of leaving a background handle alive.
-if (completed) process.exit(0);
+process.exit(process.exitCode ?? 0);

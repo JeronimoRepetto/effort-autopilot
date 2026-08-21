@@ -35,7 +35,10 @@ test("block, acknowledged effort, exact Unicode reinjection, and one-use allow",
 
   const events = [];
   const routed = await coordinator.routeTicket(first.ticketId, {
-    classifier: () => { events.push("classified"); return classification(); },
+    classifier: () => {
+      events.push("classified");
+      return classification();
+    },
     config: { ceiling: "medium", baselineEffort: "medium" },
     applyEffort: async (effort) => {
       events.push(`ack:${effort}`);
@@ -57,7 +60,10 @@ test("block, acknowledged effort, exact Unicode reinjection, and one-use allow",
       "Effort Autopilot: esfuerzo medium aplicado para claude-sonnet-5." +
       " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
   });
-  const legitimateRepeat = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  const legitimateRepeat = coordinator.handleUserPromptSubmit({
+    sessionId: SESSION,
+    prompt: PROMPT,
+  });
   assert.equal(legitimateRepeat.action, "block");
   assert.notEqual(legitimateRepeat.ticketId, first.ticketId);
   coordinator.cancelTicket(legitimateRepeat.ticketId);
@@ -73,7 +79,10 @@ test("authorization is bound to session identity", async () => {
     applyEffort: async (effort) => ({ acknowledged: true, effort }),
     reinjectPrompt: async () => {},
   });
-  const wrongSession = coordinator.handleUserPromptSubmit({ sessionId: "session-b", prompt: PROMPT });
+  const wrongSession = coordinator.handleUserPromptSubmit({
+    sessionId: "session-b",
+    prompt: PROMPT,
+  });
   assert.equal(wrongSession.action, "block");
   coordinator.cancelTicket(wrongSession.ticketId);
   assert.equal(
@@ -90,7 +99,10 @@ test("ambiguous model reinjects unchanged without an effort command", async () =
   const reinjected = [];
   const result = await coordinator.routeTicket(first.ticketId, {
     classifier: () => classification(),
-    applyEffort: async () => { effortCalls += 1; return { acknowledged: true, effort: "medium" }; },
+    applyEffort: async () => {
+      effortCalls += 1;
+      return { acknowledged: true, effort: "medium" };
+    },
     reinjectPrompt: async (prompt) => reinjected.push(prompt),
   });
   assert.equal(effortCalls, 0);
@@ -119,13 +131,19 @@ test("user effort set after a block still wins during routing, and auto re-enabl
   let effortCalls = 0;
   const result = await coordinator.routeTicket(first.ticketId, {
     classifier: () => classification(),
-    applyEffort: async () => { effortCalls += 1; return { acknowledged: true, effort: "medium" }; },
+    applyEffort: async () => {
+      effortCalls += 1;
+      return { acknowledged: true, effort: "medium" };
+    },
     reinjectPrompt: async () => {},
   });
   assert.equal(effortCalls, 0);
   assert.equal(result.cause, "explicit-user-effort");
   // Consume the replay authorization armed by the unchanged forward.
-  assert.equal(coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT }).authorizedReplay, true);
+  assert.equal(
+    coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT }).authorizedReplay,
+    true,
+  );
 
   assert.equal(coordinator.clearUserEffort(SESSION), true);
   const afterClear = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
@@ -144,7 +162,10 @@ test("a persisting application discloses the saved-default side effect", async (
     reinjectPrompt: async () => {},
   });
   const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
-  assert.match(replay.systemMessage, /esfuerzo medium aplicado para claude-sonnet-5\. El CLI también guardó este nivel como tu valor por defecto/);
+  assert.match(
+    replay.systemMessage,
+    /esfuerzo medium aplicado para claude-sonnet-5\. El CLI también guardó este nivel como tu valor por defecto/,
+  );
 });
 
 test("an unsupported session model is named in the prompt-free unchanged status", async () => {
@@ -170,7 +191,9 @@ test("unacknowledged effort still arms exactly one unchanged replay", async () =
   const result = await coordinator.routeTicket(first.ticketId, {
     classifier: () => classification(),
     applyEffort: async () => ({ acknowledged: false }),
-    reinjectPrompt: async () => { reinjections += 1; },
+    reinjectPrompt: async () => {
+      reinjections += 1;
+    },
   });
   assert.equal(result.cause, "effort-not-acknowledged");
   assert.equal(reinjections, 1);
@@ -201,7 +224,10 @@ test("routing race is bounded per session while another session remains independ
   coordinator.registerSession({ sessionId: "session-b", model: MODEL });
   const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   const busy = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: "second task" });
-  const other = coordinator.handleUserPromptSubmit({ sessionId: "session-b", prompt: "second task" });
+  const other = coordinator.handleUserPromptSubmit({
+    sessionId: "session-b",
+    prompt: "second task",
+  });
   assert.equal(busy.busy, true);
   assert.equal(busy.action, "block");
   assert.equal(other.action, "block");
@@ -218,12 +244,15 @@ test("cancel and reinjection crash leave no replay authorization", async () => {
 
   const failed = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   await assert.rejects(
-    () => coordinator.routeTicket(failed.ticketId, {
-      classifier: () => classification(),
-      config: { ceiling: "medium", baselineEffort: "medium" },
-      applyEffort: async (effort) => ({ acknowledged: true, effort }),
-      reinjectPrompt: async () => { throw new Error("pty closed"); },
-    }),
+    () =>
+      coordinator.routeTicket(failed.ticketId, {
+        classifier: () => classification(),
+        config: { ceiling: "medium", baselineEffort: "medium" },
+        applyEffort: async (effort) => ({ acknowledged: true, effort }),
+        reinjectPrompt: async () => {
+          throw new Error("pty closed");
+        },
+      }),
     /pty closed/,
   );
   assert.equal(coordinator.authorizations.size, 0);

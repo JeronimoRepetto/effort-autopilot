@@ -31,5 +31,8 @@ test("both catalogs keep the machine-readable cause codes untranslated", () => {
     assert.equal(typeof messages.applying, "string");
     assert.equal(typeof messages.busy, "string");
   }
-  assert.notEqual(brokerMessages("fix the bug").applying, brokerMessages("arregla el código").applying);
+  assert.notEqual(
+    brokerMessages("fix the bug").applying,
+    brokerMessages("arregla el código").applying,
+  );
 });

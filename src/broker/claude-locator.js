@@ -17,31 +17,39 @@ function normalizeDirectory(directory, caseInsensitive) {
   return caseInsensitive ? trimmed.toLowerCase() : trimmed;
 }
 
-export function selectRealClaudeExecutable(candidates, excludedDirectories, platform = process.platform) {
+export function selectRealClaudeExecutable(
+  candidates,
+  excludedDirectories,
+  platform = process.platform,
+) {
   const caseInsensitive = platform === "win32";
   const excluded = new Set(
     excludedDirectories.map((directory) => normalizeDirectory(directory, caseInsensitive)),
   );
-  return candidates.find(
-    (candidate) => !excluded.has(normalizeDirectory(path.dirname(candidate), caseInsensitive)),
-  ) ?? null;
+  return (
+    candidates.find(
+      (candidate) => !excluded.has(normalizeDirectory(path.dirname(candidate), caseInsensitive)),
+    ) ?? null
+  );
 }
 
 export function listClaudeCandidates({ platform = process.platform } = {}) {
   try {
-    const output = platform === "win32"
-      ? execFileSync("where.exe", ["claude"], { encoding: "utf8" })
-      : execFileSync("which", ["-a", "claude"], { encoding: "utf8" });
-    return output.trim().split(/\r?\n/u).map((line) => line.trim()).filter(Boolean);
+    const output =
+      platform === "win32"
+        ? execFileSync("where.exe", ["claude"], { encoding: "utf8" })
+        : execFileSync("which", ["-a", "claude"], { encoding: "utf8" });
+    return output
+      .trim()
+      .split(/\r?\n/u)
+      .map((line) => line.trim())
+      .filter(Boolean);
   } catch {
     return [];
   }
 }
 
-export function findRealClaudeExecutable({
-  platform = process.platform,
-  env = process.env,
-} = {}) {
+export function findRealClaudeExecutable({ platform = process.platform, env = process.env } = {}) {
   if (env.EFFORT_AUTOPILOT_REAL_CLAUDE) return env.EFFORT_AUTOPILOT_REAL_CLAUDE;
   const candidates = listClaudeCandidates({ platform });
   if (candidates.length === 0) {
@@ -50,11 +58,13 @@ export function findRealClaudeExecutable({
     if (platform !== "win32") return "claude";
     throw new Error("Claude Code CLI was not found");
   }
-  const selected = selectRealClaudeExecutable(candidates, [shimDirectory({ platform, env })], platform);
+  const selected = selectRealClaudeExecutable(
+    candidates,
+    [shimDirectory({ platform, env })],
+    platform,
+  );
   if (!selected) {
-    throw new Error(
-      "Claude Code CLI was not found (only the Effort Autopilot shim is on PATH)",
-    );
+    throw new Error("Claude Code CLI was not found (only the Effort Autopilot shim is on PATH)");
   }
   return selected;
 }

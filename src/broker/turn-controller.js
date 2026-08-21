@@ -109,9 +109,10 @@ export async function brokerTurn({
       classificationTimeoutMs,
     );
   } catch (error) {
-    const cause = error?.message === "classification-timeout"
-      ? "classification-timeout"
-      : "classification-failed";
+    const cause =
+      error?.message === "classification-timeout"
+        ? "classification-timeout"
+        : "classification-failed";
     return finishUnchanged(cause);
   }
   if (classification?.status !== "ok") return finishUnchanged("classification-failed");
@@ -129,10 +130,7 @@ export async function brokerTurn({
   } catch {
     acknowledgement = null;
   }
-  if (
-    acknowledgement?.acknowledged !== true ||
-    acknowledgement?.effort !== plan.effort
-  ) {
+  if (acknowledgement?.acknowledged !== true || acknowledgement?.effort !== plan.effort) {
     return finishUnchanged("effort-not-acknowledged");
   }
 

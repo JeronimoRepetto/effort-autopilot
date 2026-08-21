@@ -29,10 +29,7 @@ test("manual Claude skills preserve six outcomes without calling another provide
     ultracode: "xhigh",
   };
   for (const [tier, effort] of Object.entries(expectedEffort)) {
-    const skill = await readFile(
-      path.join(root, "skills", `route-${tier}`, "SKILL.md"),
-      "utf8",
-    );
+    const skill = await readFile(path.join(root, "skills", `route-${tier}`, "SKILL.md"), "utf8");
     assert.match(skill, new RegExp(`effort: ${effort}(?:\\r?\\n)`));
     assert.match(skill, /disable-model-invocation: true/);
   }
@@ -41,11 +38,18 @@ test("manual Claude skills preserve six outcomes without calling another provide
 test("no automatic hook or public launcher binary is packaged", async () => {
   const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   assert.equal(packageJson.private, true);
-  assert.equal(Object.hasOwn(packageJson, "bin"), false);
-  await assert.rejects(
-    readFile(path.join(root, "hooks", "hooks.json"), "utf8"),
-    { code: "ENOENT" },
+  // The only public executable is the reversible installer CLI; the legacy
+  // launcher stays unexposed.
+  assert.deepEqual(packageJson.bin, { "effort-autopilot": "bin/effort-autopilot-cli.js" });
+  assert.ok(Array.isArray(packageJson.files));
+  assert.ok(
+    !packageJson.files.some((entry) =>
+      /effort-autopilot\.js|effort-autopilot-pilot\.js/.test(entry),
+    ),
   );
+  await assert.rejects(readFile(path.join(root, "hooks", "hooks.json"), "utf8"), {
+    code: "ENOENT",
+  });
 });
 
 test("rejected launcher implementation is excluded from npm tarballs", async () => {

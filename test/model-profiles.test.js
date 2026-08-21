@@ -36,18 +36,16 @@ test("Opus 5 and its 1M-context variant resolve to one pinned profile", () => {
 });
 
 test("a dated immutable Haiku API alias resolves to its pinned snapshot", () => {
-  assert.equal(
-    resolveBundledModelProfile("claude-haiku-4-5").id,
-    "claude-haiku-4-5-20251001",
-  );
+  assert.equal(resolveBundledModelProfile("claude-haiku-4-5").id, "claude-haiku-4-5-20251001");
 });
 
 test("profile overrides must match the explicitly requested model", () => {
   assert.throws(
-    () => resolveModelProfile({
-      modelId: "claude-sonnet-5",
-      override: { id: "claude-fable-5", supportedEfforts: ["low"] },
-    }),
+    () =>
+      resolveModelProfile({
+        modelId: "claude-sonnet-5",
+        override: { id: "claude-fable-5", supportedEfforts: ["low"] },
+      }),
     /does not match/,
   );
   assert.deepEqual(

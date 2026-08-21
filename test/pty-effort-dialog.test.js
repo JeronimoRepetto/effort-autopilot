@@ -11,7 +11,11 @@ function fakeChild(script) {
     writes,
     onData(listener) {
       dataListener = listener;
-      return { dispose() { dataListener = null; } };
+      return {
+        dispose() {
+          dataListener = null;
+        },
+      };
     },
     onExit() {
       return { dispose() {} };
@@ -48,10 +52,12 @@ test("mid-conversation confirmation dialog is confirmed by the broker itself", a
   });
   const session = new PtySession(child, { acknowledgementTimeoutMs: 300 });
   // viaDialog surfaces upstream so the saved-default side effect is disclosed.
-  assert.deepEqual(
-    await session.applyEffort("xhigh"),
-    { acknowledged: true, effort: "xhigh", viaDialog: true, persistsSavedDefault: true },
-  );
+  assert.deepEqual(await session.applyEffort("xhigh"), {
+    acknowledged: true,
+    effort: "xhigh",
+    viaDialog: true,
+    persistsSavedDefault: true,
+  });
   assert.deepEqual(child.writes, ["/effort xhigh\r", "\r"]);
 });
 

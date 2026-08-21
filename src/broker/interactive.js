@@ -34,7 +34,7 @@ async function resolveUserSettingsObject(settingsValue) {
   }
   const trimmed = settingsValue.trim();
   const raw = trimmed.startsWith("{") ? trimmed : await readFile(settingsValue, "utf8");
-  return JSON.parse(raw.replace(/^﻿/, ""));
+  return JSON.parse(raw.replace(/^\uFEFF/, ""));
 }
 
 export async function runInteractiveBroker({
@@ -98,7 +98,13 @@ export async function runInteractiveBroker({
     errorOutput.write(
       `Effort Autopilot: automatic effort is disabled for this launch (${passthroughCause}); Claude runs unchanged.\r\n`,
     );
-    return relayPlainSession({ claudeExecutable, claudeArgs: launch.forwardArgs, cwd, input, output });
+    return relayPlainSession({
+      claudeExecutable,
+      claudeArgs: launch.forwardArgs,
+      cwd,
+      input,
+      output,
+    });
   }
 
   const resolvedPolicy = resolveAutopilotPolicy({
@@ -123,9 +129,11 @@ export async function runInteractiveBroker({
   // spawn is what keeps every automatic change session-only.
   const baseline = launch.effort ? null : resolveSessionEffortBaseline({ cwd, home });
   if (launch.effort) {
-    errorOutput.write(autopilotWins
-      ? `Effort Autopilot: session effort starts at ${launch.effort} (--effort flag); autopilot-wins re-evaluates it per prompt.\r\n`
-      : `Effort Autopilot: manual --effort ${launch.effort} takes precedence; automatic effort is disabled for this session.\r\n`);
+    errorOutput.write(
+      autopilotWins
+        ? `Effort Autopilot: session effort starts at ${launch.effort} (--effort flag); autopilot-wins re-evaluates it per prompt.\r\n`
+        : `Effort Autopilot: manual --effort ${launch.effort} takes precedence; automatic effort is disabled for this session.\r\n`,
+    );
   } else {
     errorOutput.write(
       `Effort Autopilot: session effort starts at ${baseline.effort} (${baseline.source}); automatic changes are session-only.\r\n`,
@@ -174,29 +182,32 @@ export async function runInteractiveBroker({
     },
     onBlocked: ({ ticketId }) => {
       relay?.pauseForRouting();
-      const route = coordinator.routeTicket(ticketId, {
-        classifier: classifyEnvelope,
-        config: { ceiling: "max", baselineEffort: "medium" },
-        applyEffort: async (effort) => {
-          if (policy.shouldSkipApplication(effort)) {
-            return { acknowledged: true, effort };
-          }
-          observer.beginBrokerApplication(effort);
-          try {
-            const result = await session.applyEffort(effort);
-            if (result.acknowledged) policy.noteAcknowledgedApplication(effort);
-            return result;
-          } finally {
-            observer.endBrokerApplication();
-          }
-        },
-        reinjectPrompt: (prompt) => session.forwardPrompt(prompt),
-      }).catch((error) => {
-        errorOutput.write(`\r\nEffort Autopilot could not route this turn: ${error.message}\r\n`);
-      }).finally(() => {
-        activeRoutes.delete(route);
-        relay?.resumeAfterRouting();
-      });
+      const route = coordinator
+        .routeTicket(ticketId, {
+          classifier: classifyEnvelope,
+          config: { ceiling: "max", baselineEffort: "medium" },
+          applyEffort: async (effort) => {
+            if (policy.shouldSkipApplication(effort)) {
+              return { acknowledged: true, effort };
+            }
+            observer.beginBrokerApplication(effort);
+            try {
+              const result = await session.applyEffort(effort);
+              if (result.acknowledged) policy.noteAcknowledgedApplication(effort);
+              return result;
+            } finally {
+              observer.endBrokerApplication();
+            }
+          },
+          reinjectPrompt: (prompt) => session.forwardPrompt(prompt),
+        })
+        .catch((error) => {
+          errorOutput.write(`\r\nEffort Autopilot could not route this turn: ${error.message}\r\n`);
+        })
+        .finally(() => {
+          activeRoutes.delete(route);
+          relay?.resumeAfterRouting();
+        });
       activeRoutes.add(route);
     },
   });

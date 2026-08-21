@@ -92,7 +92,8 @@ test("fail-closed mode rejects locally without a forward or retry", () => {
         },
         onFailure: "reject",
       }),
-    (error) => error instanceof GatewayTransformError && error.code === "gateway-classification-rejected",
+    (error) =>
+      error instanceof GatewayTransformError && error.code === "gateway-classification-rejected",
   );
   assert.equal(classifications, 1);
 });
@@ -106,7 +107,7 @@ test("prompt-free gateway metadata is safe to display or measure", () => {
 test("synthetic streaming pass-through preserves bytes and chunk order", async () => {
   const chunks = [
     Buffer.from("event: message_start\n\n"),
-    Buffer.from("data: {\"type\":\"content_block_delta\"}\n\n"),
+    Buffer.from('data: {"type":"content_block_delta"}\n\n'),
     Buffer.from("event: ping\n\n"),
   ];
   const relayed = [];

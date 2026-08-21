@@ -77,10 +77,30 @@ test("explicit user effort has precedence and bypasses classification and mutati
 for (const [name, overrides, expectedCause] of [
   ["ambiguous terminal state", { terminalState: "permission-prompt" }, "ambiguous-terminal-state"],
   ["unsupported model", { activeModel: "sonnet" }, "unsupported-or-ambiguous-model"],
-  ["insufficient confidence", { classifier: () => confidentClassification("medium", 0.4) }, "insufficient-confidence"],
-  ["classification failure", { classifier: () => ({ status: "fallback" }) }, "classification-failed"],
-  ["classification exception", { classifier: () => { throw new Error("boom"); } }, "classification-failed"],
-  ["unacknowledged effort", { applyEffort: async () => ({ acknowledged: false }) }, "effort-not-acknowledged"],
+  [
+    "insufficient confidence",
+    { classifier: () => confidentClassification("medium", 0.4) },
+    "insufficient-confidence",
+  ],
+  [
+    "classification failure",
+    { classifier: () => ({ status: "fallback" }) },
+    "classification-failed",
+  ],
+  [
+    "classification exception",
+    {
+      classifier: () => {
+        throw new Error("boom");
+      },
+    },
+    "classification-failed",
+  ],
+  [
+    "unacknowledged effort",
+    { applyEffort: async () => ({ acknowledged: false }) },
+    "effort-not-acknowledged",
+  ],
 ]) {
   test(`${name} visibly forwards unchanged exactly once`, async () => {
     const result = await run(overrides);
@@ -97,7 +117,10 @@ test("classification timeout fails open without a late duplicate", async () => {
   let resolveClassification;
   const result = await run({
     classificationTimeoutMs: 5,
-    classifier: () => new Promise((resolve) => { resolveClassification = resolve; }),
+    classifier: () =>
+      new Promise((resolve) => {
+        resolveClassification = resolve;
+      }),
   });
   assert.deepEqual(result.forwarded, [PROMPT]);
   assert.equal(result.metadata.cause, "classification-timeout");

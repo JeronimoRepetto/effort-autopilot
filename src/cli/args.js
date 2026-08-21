@@ -14,7 +14,8 @@ const PERMISSION_MODES = new Set(["manual", "acceptEdits", "plan", "dontAsk"]);
 
 function positiveInteger(value, name) {
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) throw new Error(`${name} must be a positive integer`);
+  if (!Number.isInteger(parsed) || parsed <= 0)
+    throw new Error(`${name} must be a positive integer`);
   return parsed;
 }
 
@@ -76,8 +77,10 @@ export function parseCliArgs(argv, env = process.env) {
     }
   }
 
-  if (!isEffort(options.ceiling)) throw new Error("--ceiling must be low, medium, high, xhigh, or max");
-  if (!isEffort(options.baselineEffort)) throw new Error("--baseline must be low, medium, high, xhigh, or max");
+  if (!isEffort(options.ceiling))
+    throw new Error("--ceiling must be low, medium, high, xhigh, or max");
+  if (!isEffort(options.baselineEffort))
+    throw new Error("--baseline must be low, medium, high, xhigh, or max");
   if (options.permissionMode && !PERMISSION_MODES.has(options.permissionMode)) {
     throw new Error("unsupported --permission-mode");
   }
@@ -85,7 +88,11 @@ export function parseCliArgs(argv, env = process.env) {
     throw new Error("use either --stdin or prompt arguments, not both");
   }
 
-  return Object.freeze({ command, options: Object.freeze(options), promptParts: Object.freeze(promptParts) });
+  return Object.freeze({
+    command,
+    options: Object.freeze(options),
+    promptParts: Object.freeze(promptParts),
+  });
 }
 
 export const HELP_TEXT = `Effort Autopilot — classify locally, then run Claude once with pre-call effort

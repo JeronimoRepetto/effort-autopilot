@@ -5,9 +5,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { ClaudeExecutionError, ClaudeRateLimitError } from "../src/adapters/claude-cli/runner.js";
-import { createMockRunner, recoverVerifiedTerminalTrial, runPilot } from "../src/evaluation/pilot.js";
+import {
+  createMockRunner,
+  recoverVerifiedTerminalTrial,
+  runPilot,
+} from "../src/evaluation/pilot.js";
 
-function manifest(ids = ["public-01", "public-02", "public-03"] ) {
+function manifest(ids = ["public-01", "public-02", "public-03"]) {
   return { benchmark: "test-pilot", tasks: ids.map((id) => ({ id })) };
 }
 
@@ -54,11 +58,10 @@ test("mock pilot streams visible fields and checkpoints prompt-free results", as
   const persisted = await readFile(place.resultsFile, "utf8");
   assert.equal(persisted.includes("Public dry-run benchmark task"), false);
   assert.equal(persisted.includes("prompt"), false);
-  assert.deepEqual(JSON.parse(persisted).trials.map(({ taskId }) => taskId), [
-    "public-01",
-    "public-02",
-    "public-03",
-  ]);
+  assert.deepEqual(
+    JSON.parse(persisted).trials.map(({ taskId }) => taskId),
+    ["public-01", "public-02", "public-03"],
+  );
 });
 
 test("subscription limit stops immediately and resume skips completed paid work", async () => {
@@ -106,11 +109,10 @@ test("subscription limit stops immediately and resume skips completed paid work"
   assert.equal(resumedCalls, 2);
   assert.equal(resumed.summary.completed, 3);
   assert.equal(resumed.summary.pending, 0);
-  assert.deepEqual(resumed.state.trials.map(({ taskId }) => taskId), [
-    "public-01",
-    "public-02",
-    "public-03",
-  ]);
+  assert.deepEqual(
+    resumed.state.trials.map(({ taskId }) => taskId),
+    ["public-01", "public-02", "public-03"],
+  );
 });
 
 test("launcher errors are distinct and never retried", async () => {
@@ -162,13 +164,15 @@ test("task-specific ceiling, turn limit, and timeout are applied before one exec
   const result = await runPilot({
     manifest: {
       benchmark: "task-controls",
-      tasks: [{
-        id: "public-01",
-        ceiling: "low",
-        baselineEffort: "low",
-        maxTurns: 2,
-        timeoutMs: 1234,
-      }],
+      tasks: [
+        {
+          id: "public-01",
+          ceiling: "low",
+          baselineEffort: "low",
+          maxTurns: 2,
+          timeoutMs: 1234,
+        },
+      ],
     },
     cwd: place.root,
     resultsFile: place.resultsFile,
@@ -199,13 +203,15 @@ test("live verifier fails if a protected fixture file is changed", async () => {
   const result = await runPilot({
     manifest: {
       benchmark: "protected-verifier",
-      tasks: [{
-        id: "public-01",
-        workspaceSource: "source",
-        promptFile: "TASK.md",
-        protectedFiles: ["verify.py"],
-        verifier: { command: "python", args: ["verify.py"] },
-      }],
+      tasks: [
+        {
+          id: "public-01",
+          workspaceSource: "source",
+          promptFile: "TASK.md",
+          protectedFiles: ["verify.py"],
+          verifier: { command: "python", args: ["verify.py"] },
+        },
+      ],
     },
     cwd: place.root,
     resultsFile: place.resultsFile,
@@ -238,14 +244,16 @@ async function terminalFixture(place, verifierExitCode) {
   const result = await runPilot({
     manifest: {
       benchmark: "terminal-verifier",
-      tasks: [{
-        id: "public-01",
-        workspaceSource: "terminal-source",
-        promptFile: "TASK.md",
-        protectedFiles: ["verify.py"],
-        maxTurns: 4,
-        verifier: { command: "python", args: ["verify.py"] },
-      }],
+      tasks: [
+        {
+          id: "public-01",
+          workspaceSource: "terminal-source",
+          promptFile: "TASK.md",
+          protectedFiles: ["verify.py"],
+          maxTurns: 4,
+          verifier: { command: "python", args: ["verify.py"] },
+        },
+      ],
     },
     cwd: place.root,
     resultsFile: place.resultsFile,
@@ -307,13 +315,18 @@ test("subscription limit never runs the workspace verifier or retries", async ()
   let claudeCalls = 0;
   let verifierCalls = 0;
   const result = await runPilot({
-    manifest: { benchmark: "rate-stop", tasks: [{
-      id: "public-01",
-      workspaceSource: "rate-source",
-      promptFile: "TASK.md",
-      protectedFiles: ["verify.py"],
-      verifier: { command: "python", args: ["verify.py"] },
-    }] },
+    manifest: {
+      benchmark: "rate-stop",
+      tasks: [
+        {
+          id: "public-01",
+          workspaceSource: "rate-source",
+          promptFile: "TASK.md",
+          protectedFiles: ["verify.py"],
+          verifier: { command: "python", args: ["verify.py"] },
+        },
+      ],
+    },
     cwd: place.root,
     resultsFile: place.resultsFile,
     workspaceRoot: place.workspaceRoot,
@@ -342,23 +355,26 @@ test("terminal recovery is verifier-backed and checkpoint-idempotent", async () 
   assert.equal(failed.result.summary.completed, 0);
   const manifestValue = {
     benchmark: "terminal-verifier",
-    tasks: [{
-      id: "public-01",
-      workspaceSource: "terminal-source",
-      promptFile: "TASK.md",
-      protectedFiles: ["verify.py"],
-      maxTurns: 4,
-      verifier: { command: "python", args: ["verify.py"] },
-    }],
+    tasks: [
+      {
+        id: "public-01",
+        workspaceSource: "terminal-source",
+        promptFile: "TASK.md",
+        protectedFiles: ["verify.py"],
+        maxTurns: 4,
+        verifier: { command: "python", args: ["verify.py"] },
+      },
+    ],
   };
-  const recover = () => recoverVerifiedTerminalTrial({
-    manifest: manifestValue,
-    cwd: place.root,
-    resultsFile: place.resultsFile,
-    workspaceRoot: place.workspaceRoot,
-    taskId: "public-01",
-    processRunner: async () => ({ exitCode: 0 }),
-  });
+  const recover = () =>
+    recoverVerifiedTerminalTrial({
+      manifest: manifestValue,
+      cwd: place.root,
+      resultsFile: place.resultsFile,
+      workspaceRoot: place.workspaceRoot,
+      taskId: "public-01",
+      processRunner: async () => ({ exitCode: 0 }),
+    });
   const first = await recover();
   const second = await recover();
   assert.equal(first.recovered, true);

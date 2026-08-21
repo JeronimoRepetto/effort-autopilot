@@ -11,7 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const helper = path.join(root, "test", "helpers", "run-broker-pty-poc.mjs");
 
 test("terminal acknowledgement normalization removes TUI cursor controls", () => {
-  const raw = "Set\u001b[1Ceffort\u001b[1Clevel\u001b[1Cto\u001b[1Cmax\u001b[1C(this\u001b[1Csession\u001b[1Conly):";
+  const raw =
+    "Set\u001b[1Ceffort\u001b[1Clevel\u001b[1Cto\u001b[1Cmax\u001b[1C(this\u001b[1Csession\u001b[1Conly):";
   assert.match(terminalText(raw), /Set effort level to max \(this session only\):/);
 });
 
@@ -28,10 +29,7 @@ test("multiline and control-bearing prompt uses one bracketed paste then submit"
     promptSettleMs: 1,
   });
   await session.forwardPrompt("línea uno ☕\nlínea dos");
-  assert.deepEqual(writes, [
-    "\u001b[200~línea uno ☕\nlínea dos\u001b[201~",
-    "\u001b[13u",
-  ]);
+  assert.deepEqual(writes, ["\u001b[200~línea uno ☕\nlínea dos\u001b[201~", "\u001b[13u"]);
   session.dispose();
 });
 

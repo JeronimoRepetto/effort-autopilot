@@ -57,14 +57,17 @@ test("wrong IPC token is rejected and hook-side IPC failure allows original prom
   });
   assert.deepEqual(unauthorized, { ok: false, errorCode: "unauthorized" });
 
-  const hookOutput = await handleClaudeHookInput({
-    hook_event_name: "UserPromptSubmit",
-    session_id: "x",
-    prompt: "must pass unchanged",
-  }, {
-    endpoint: identity.endpoint,
-    token: "wrong-token",
-  });
+  const hookOutput = await handleClaudeHookInput(
+    {
+      hook_event_name: "UserPromptSubmit",
+      session_id: "x",
+      prompt: "must pass unchanged",
+    },
+    {
+      endpoint: identity.endpoint,
+      token: "wrong-token",
+    },
+  );
   assert.deepEqual(hookOutput, {
     systemMessage: "Effort Autopilot: automatic effort unchanged (broker unavailable).",
   });
@@ -93,19 +96,22 @@ test("hook client maps broker block and allow without echoing prompt", async () 
 });
 
 test("hook client surfaces prompt-free applied status on authorized replay", async () => {
-  const output = await handleClaudeHookInput({
-    hook_event_name: "UserPromptSubmit",
-    session_id: "session",
-    prompt: "private prompt",
-  }, {
-    endpoint: "synthetic",
-    token: "synthetic",
-    call: async () => ({
-      ok: true,
-      action: "allow",
-      systemMessage: "Effort Autopilot: applied low for claude-fable-5.",
-    }),
-  });
+  const output = await handleClaudeHookInput(
+    {
+      hook_event_name: "UserPromptSubmit",
+      session_id: "session",
+      prompt: "private prompt",
+    },
+    {
+      endpoint: "synthetic",
+      token: "synthetic",
+      call: async () => ({
+        ok: true,
+        action: "allow",
+        systemMessage: "Effort Autopilot: applied low for claude-fable-5.",
+      }),
+    },
+  );
   assert.deepEqual(output, {
     systemMessage: "Effort Autopilot: applied low for claude-fable-5.",
   });

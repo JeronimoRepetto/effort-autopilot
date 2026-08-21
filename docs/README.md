@@ -8,6 +8,7 @@ This directory is the detailed reference for Effort Autopilot. The root [README]
 | --- | --- |
 | [Product contract](PRODUCT.md) | Purpose, terminology, guarantees, non-guarantees, and current scope |
 | [Installation](INSTALL.md) | Reversible global shim install, uninstall, status, precedence policy, and per-project control |
+| [Release checklist](RELEASE_CHECKLIST.md) | Deliberate npm publication gates, tarball inspection, and post-publication verification |
 | [Stock CLI feasibility](STOCK_HOST_FEASIBILITY.md) | Hybrid hook/ConPTY proof, gateway evidence, installed zero-inference result, and release gaps |
 | [Isolated user test](ISOLATED_TEST.md) | Reversible first live trial using the normal `claude` command in a temporary PowerShell session |
 | [Draft upstream proposal](UPSTREAM_CAPABILITY_PROPOSAL.md) | Local, unsubmitted same-turn hook proposal and engineering appendix |
@@ -28,4 +29,4 @@ This directory is the detailed reference for Effort Autopilot. The root [README]
 
 ## Authority and synchronization
 
-The implementation and automated tests are authoritative. The npm package is private and exports no executable while the broker is unproven. Internal launcher/pilot documents are contributor references, not end-user alternatives. Official Claude behavior can change independently; validate against the current release before distribution.
+The implementation and automated tests are authoritative. The npm package remains private and unpublished; its only executable mapping is the reversible installer CLI (`effort-autopilot`), and publication follows the [release checklist](RELEASE_CHECKLIST.md). Internal launcher/pilot documents are contributor references, not end-user alternatives. Official Claude behavior can change independently; validate against the current release before distribution.

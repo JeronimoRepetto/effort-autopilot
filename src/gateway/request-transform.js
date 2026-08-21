@@ -65,7 +65,7 @@ export function prepareGatewayRequest({
   profileResolver = resolveModelProfile,
   onFailure = "preserve",
 } = {}) {
-  if (!(["preserve", "reject"].includes(onFailure))) {
+  if (!["preserve", "reject"].includes(onFailure)) {
     throw new TypeError("onFailure must be preserve or reject");
   }
 

@@ -34,9 +34,7 @@ export function tierForScore(score) {
 }
 
 function isBoundaryScore(score) {
-  return THRESHOLDS.slice(1).some(
-    ({ min }) => score === min || score === min - 1,
-  );
+  return THRESHOLDS.slice(1).some(({ min }) => score === min || score === min - 1);
 }
 
 function nextTier(tier) {
@@ -163,25 +161,23 @@ function resolveSupportedEffort(tier, modelProfile) {
   const supported = Array.isArray(modelProfile?.supportedEfforts)
     ? modelProfile.supportedEfforts.filter((value) => EFFORT_TIERS.includes(value))
     : null;
-  const cap = EFFORT_TIERS.includes(modelProfile?.effortCap)
-    ? modelProfile.effortCap
-    : null;
+  const cap = EFFORT_TIERS.includes(modelProfile?.effortCap) ? modelProfile.effortCap : null;
   let resolved = requestedEffort;
   if (cap && EFFORT_TIERS.indexOf(resolved) > EFFORT_TIERS.indexOf(cap)) {
     resolved = cap;
   }
   if (supported?.length && !supported.includes(resolved)) {
     const requestedIndex = EFFORT_TIERS.indexOf(resolved);
-    resolved = [...supported]
-      .sort((a, b) => EFFORT_TIERS.indexOf(b) - EFFORT_TIERS.indexOf(a))
-      .find((value) => EFFORT_TIERS.indexOf(value) <= requestedIndex) ?? supported[0];
+    resolved =
+      [...supported]
+        .sort((a, b) => EFFORT_TIERS.indexOf(b) - EFFORT_TIERS.indexOf(a))
+        .find((value) => EFFORT_TIERS.indexOf(value) <= requestedIndex) ?? supported[0];
   }
   const ultracodeAvailable = modelProfile?.ultracodeAvailable === true;
   return {
     requestedTier: tier,
     claudeEffort: resolved,
-    orchestrationMode:
-      tier === "ultracode" && ultracodeAvailable ? "ultracode" : "standard",
+    orchestrationMode: tier === "ultracode" && ultracodeAvailable ? "ultracode" : "standard",
     fallbackTier: tier === "ultracode" ? resolved : "auto",
     clamped: resolved !== requestedEffort || (tier === "ultracode" && !ultracodeAvailable),
     status: "unapplied",
@@ -223,17 +219,13 @@ export function classifyPrompt(prompt, context) {
   addSystemSignals(normalized, environment, signals);
   const environmentMetadataUsed = addEnvironmentSignals(environment, signals);
 
-  const uncertaintySignals = UNCERTAINTY_RULES.filter((rule) =>
-    rule.pattern.test(normalized),
-  );
+  const uncertaintySignals = UNCERTAINTY_RULES.filter((rule) => rule.pattern.test(normalized));
 
   const score = signals.reduce((total, signal) => total + signal.weight, 0);
   let tier = tierForScore(score);
 
   const explicitMax = signals.some(({ name }) => name === "explicit-max");
-  const explicitUltracode = signals.some(
-    ({ name }) => name === "explicit-ultracode",
-  );
+  const explicitUltracode = signals.some(({ name }) => name === "explicit-ultracode");
   const explicitIntent = explicitMax || explicitUltracode;
   if (explicitUltracode) {
     tier = "ultracode";
@@ -249,11 +241,7 @@ export function classifyPrompt(prompt, context) {
     (isBoundaryScore(score) ? CONFIDENCE_POLICY.boundaryPenalty : 0) -
     (!modelProfile ? CONFIDENCE_POLICY.missingModelProfilePenalty : 0) -
     (uncertaintySignals.length ? CONFIDENCE_POLICY.uncertaintyPenalty : 0);
-  confidence = clamp(
-    confidence,
-    CONFIDENCE_POLICY.minimum,
-    CONFIDENCE_POLICY.maximum,
-  );
+  confidence = clamp(confidence, CONFIDENCE_POLICY.minimum, CONFIDENCE_POLICY.maximum);
 
   let conservativeEscalation = false;
   if (confidence < CONFIDENCE_POLICY.conservativeThreshold && !explicitIntent) {
@@ -274,15 +262,14 @@ export function classifyPrompt(prompt, context) {
       signals.push({
         name: "ultracode-gate-not-met",
         weight: 0,
-        reason: "The task does not show enough long-horizon, multi-workstream structure for ultracode.",
+        reason:
+          "The task does not show enough long-horizon, multi-workstream structure for ultracode.",
       });
     }
   }
 
   const baseTier = tier;
-  const rawOffset = Number.isInteger(modelProfile?.effortOffset)
-    ? modelProfile.effortOffset
-    : 0;
+  const rawOffset = Number.isInteger(modelProfile?.effortOffset) ? modelProfile.effortOffset : 0;
   const modelRelativeOffset = clamp(rawOffset, -2, 2);
   if (!explicitIntent) {
     tier = shiftEffortTier(tier, modelRelativeOffset);
@@ -301,7 +288,9 @@ export function classifyPrompt(prompt, context) {
     );
   }
   if (!modelProfile) {
-    reasons.push("No active-model capability profile was supplied, so model-relative calibration was not applied.");
+    reasons.push(
+      "No active-model capability profile was supplied, so model-relative calibration was not applied.",
+    );
   }
 
   return Object.freeze({

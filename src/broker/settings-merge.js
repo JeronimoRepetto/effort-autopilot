@@ -24,7 +24,8 @@ export function mergeHookSettings(userSettings, hookCommand) {
   if (!isPlainObject(merged.hooks)) throw new TypeError("user settings 'hooks' must be an object");
   for (const [event, entries] of Object.entries(brokerHookConfiguration(hookCommand))) {
     const existing = merged.hooks[event] ?? [];
-    if (!Array.isArray(existing)) throw new TypeError(`user settings 'hooks.${event}' must be an array`);
+    if (!Array.isArray(existing))
+      throw new TypeError(`user settings 'hooks.${event}' must be an array`);
     merged.hooks[event] = [...existing, ...entries];
   }
   return merged;

@@ -86,7 +86,10 @@ export function resolveBundledModelProfile(modelId) {
   // A trailing "[1m]" marks the 1M-context variant of the same snapshot
   // (observed live: SessionStart reported "claude-opus-5[1m]"). Context size
   // does not change the effort ladder, so the base profile applies.
-  const normalized = modelId.trim().toLowerCase().replace(/\[1m\]$/, "");
+  const normalized = modelId
+    .trim()
+    .toLowerCase()
+    .replace(/\[1m\]$/, "");
   if (MODEL_PROFILES[normalized]) return MODEL_PROFILES[normalized];
   return Object.values(MODEL_PROFILES).find(({ aliases }) => aliases.includes(normalized)) ?? null;
 }

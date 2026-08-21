@@ -17,9 +17,8 @@ function replaySystemMessage(messages, metadata, rawModel = null) {
   const cause = metadata?.cause ?? "unknown";
   // Naming the unsupported model id (never prompt content) lets the user see
   // which profile is missing instead of guessing.
-  const detail = cause === "unsupported-or-ambiguous-model" && rawModel
-    ? `${cause}: ${rawModel}`
-    : cause;
+  const detail =
+    cause === "unsupported-or-ambiguous-model" && rawModel ? `${cause}: ${rawModel}` : cause;
   return messages.unchanged(detail);
 }
 
@@ -134,16 +133,19 @@ export class HybridBrokerCoordinator {
     });
   }
 
-  async routeTicket(ticketId, {
-    classifier,
-    environment,
-    config,
-    applyEffort,
-    reinjectPrompt,
-    onStatus,
-    classificationTimeoutMs,
-    minimumConfidence,
-  } = {}) {
+  async routeTicket(
+    ticketId,
+    {
+      classifier,
+      environment,
+      config,
+      applyEffort,
+      reinjectPrompt,
+      onStatus,
+      classificationTimeoutMs,
+      minimumConfidence,
+    } = {},
+  ) {
     const ticket = this.pending.get(ticketId);
     if (!ticket) throw new Error("unknown-or-stale-ticket");
     const session = this.sessions.get(ticket.sessionId) ?? {

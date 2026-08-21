@@ -72,8 +72,8 @@ test("mixed acknowledgements in one burst are handled in on-screen order", () =>
   const { observer, events } = record();
   observer.feed(
     "⎿ Set effort level to low (this session only)\n" +
-    "⎿ Effort level set to auto\n" +
-    "⎿ Set model to Haiku 4.5\n",
+      "⎿ Effort level set to auto\n" +
+      "⎿ Set model to Haiku 4.5\n",
   );
   assert.deepEqual(events, ["effort:low", "effort:auto", "model-change"]);
 });

@@ -1,12 +1,42 @@
 {
-  "name": "effort-autopilot",
-  "version": "0.2.0",
-  "description": "An experimental transparent Claude Code CLI effort broker with local model-aware classification.",
+  "name": "@jeronimorepetto/claude-effort-autopilot",
+  "version": "0.3.0",
+  "description": "Transparent effort broker for the Claude Code CLI: classifies each prompt locally (zero tokens, no network) and applies the right effort level before inference, without changing model, provider, or session.",
   "type": "module",
   "private": true,
   "engines": {
     "node": ">=20"
   },
+  "bin": {
+    "effort-autopilot": "bin/effort-autopilot-cli.js"
+  },
+  "files": [
+    "bin/effort-autopilot-cli.js",
+    "bin/internal-interactive-broker.js",
+    "bin/internal-effort-autopilot-hook.js",
+    "src/broker/",
+    "src/core/",
+    "src/installer/",
+    "docs/INSTALL.md",
+    "docs/PRODUCT.md",
+    "docs/SECURITY.md",
+    "docs/TROUBLESHOOTING.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "llm",
+    "ai",
+    "effort",
+    "autopilot",
+    "cli",
+    "token-optimization",
+    "cost-optimization",
+    "reasoning-effort"
+  ],
   "scripts": {
     "broker:poc:test": "node --test test/broker-turn.test.js test/broker-pty.test.js",
     "broker:poc:installed-zero-inference": "node scripts/verify-hybrid-broker-no-inference.mjs",
@@ -16,6 +46,9 @@
     "internal:pilot:dry-run": "node bin/effort-autopilot-pilot.js dry-run",
     "pilot:prepare-live": "node scripts/prepare-live-pilot.mjs",
     "pilot:recover-live": "node scripts/recover-live-pilot.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
     "test": "node scripts/run-tests.mjs",
     "validate": "claude plugin validate ."
   },
@@ -26,5 +59,10 @@
   },
   "dependencies": {
     "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.0",
+    "prettier": "^3.9.6"
   }
 }

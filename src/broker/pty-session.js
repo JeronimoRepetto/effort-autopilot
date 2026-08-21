@@ -15,11 +15,10 @@ export function terminalText(value) {
 }
 
 export class PtySession {
-  constructor(child, {
-    acknowledgementTimeoutMs = 1000,
-    topLevelSubmitSequence = "\r",
-    promptSettleMs = 500,
-  } = {}) {
+  constructor(
+    child,
+    { acknowledgementTimeoutMs = 1000, topLevelSubmitSequence = "\r", promptSettleMs = 500 } = {},
+  ) {
     this.child = child;
     this.acknowledgementTimeoutMs = acknowledgementTimeoutMs;
     this.topLevelSubmitSequence = topLevelSubmitSequence;
@@ -59,14 +58,13 @@ export class PtySession {
     };
     if (matches()) return Promise.resolve(this.buffer);
     return new Promise((resolve, reject) => {
-      let timer;
       const check = () => {
         if (!matches()) return;
         clearTimeout(timer);
         this.waiters.delete(check);
         resolve(this.buffer);
       };
-      timer = setTimeout(() => {
+      const timer = setTimeout(() => {
         this.waiters.delete(check);
         reject(new Error("pty-acknowledgement-timeout"));
       }, timeoutMs);
@@ -139,9 +137,7 @@ export class PtySession {
     // Multiline/control-bearing prompt text must enter as one bracketed-paste
     // transaction so newline and escape bytes are editor content, not keys.
     // The second hook's digest match is the end-to-end fidelity check.
-    const payload = /[\r\n\u001b]/.test(prompt)
-      ? `\u001b[200~${prompt}\u001b[201~`
-      : prompt;
+    const payload = /[\r\n\u001b]/.test(prompt) ? `\u001b[200~${prompt}\u001b[201~` : prompt;
     this.child.write(payload);
     // Ink/React-based TUIs can coalesce a text burst and carriage return into
     // one paste event. A short transport yield keeps submit distinct without

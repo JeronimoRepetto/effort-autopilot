@@ -28,10 +28,12 @@ process.stdin.on("end", async () => {
       } catch {
         // The independent block below is intentionally not conditional on IPC.
       }
-      process.stdout.write(JSON.stringify({
-        decision: "block",
-        reason: "Zero-inference diagnostic guard blocked this submission.",
-      }));
+      process.stdout.write(
+        JSON.stringify({
+          decision: "block",
+          reason: "Zero-inference diagnostic guard blocked this submission.",
+        }),
+      );
     } else {
       process.stdout.write("{}");
     }

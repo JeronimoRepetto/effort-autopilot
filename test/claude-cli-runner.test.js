@@ -16,7 +16,10 @@ test("CLI invocation applies effort pre-call and preserves model/provider by omi
   assert.equal(invocation.args[invocation.args.indexOf("--effort") + 1], "medium");
   assert.equal(invocation.args.includes("--model"), false);
   assert.equal(invocation.args.includes("--no-session-persistence"), true);
-  assert.equal(invocation.args.some((value) => /provider/i.test(value)), false);
+  assert.equal(
+    invocation.args.some((value) => /provider/i.test(value)),
+    false,
+  );
 });
 
 test("explicit model and bounded controls are forwarded", () => {
@@ -50,10 +53,16 @@ test("locked-down task invocation exposes only approved edit tools", () => {
   });
   assert.equal(invocation.args.includes("--safe-mode"), true);
   assert.deepEqual(
-    invocation.args.slice(invocation.args.indexOf("--tools"), invocation.args.indexOf("--tools") + 4),
+    invocation.args.slice(
+      invocation.args.indexOf("--tools"),
+      invocation.args.indexOf("--tools") + 4,
+    ),
     ["--tools", "Read,Edit,Write", "--allowedTools", "Read,Edit,Write"],
   );
-  assert.equal(invocation.args.some((value) => value.includes("Bash")), false);
+  assert.equal(
+    invocation.args.some((value) => value.includes("Bash")),
+    false,
+  );
 });
 
 test("runner invokes one CLI process, sends prompt only on stdin, and captures usage", async () => {

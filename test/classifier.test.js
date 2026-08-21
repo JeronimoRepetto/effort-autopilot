@@ -9,8 +9,7 @@ const REPRESENTATIVE_PROMPTS = Object.freeze({
   high: "Implement authentication validation and tests for the login handler.",
   xhigh:
     "Investigate a flaky race condition in our cross-platform authentication service, find the root cause, implement the fix, and add tests.",
-  max:
-    "Perform a comprehensive audit of authentication and payment flows across the entire codebase, investigate the root cause of failures, build a threat model, and add tests.",
+  max: "Perform a comprehensive audit of authentication and payment flows across the entire codebase, investigate the root cause of failures, build a threat model, and add tests.",
   ultracode:
     "Architect and implement an end-to-end migration across the entire monorepo. Investigate the production incident and security risks, coordinate multiple services, add comprehensive tests, benchmark performance, design zero-downtime rollout and rollback paths, verify all edge cases, and document independent workstreams for the client, API, data layer, and operations team.",
 });
@@ -139,7 +138,10 @@ test("active-model profile makes the minimum sufficient effort model-relative", 
   assert.equal(higherNeed.baseTier, "high");
   assert.equal(higherNeed.tier, "xhigh");
   assert.equal(lowerNeed.tier, "medium");
-  assert.notEqual(higherNeed.predictedMinimumSufficientEffort, lowerNeed.predictedMinimumSufficientEffort);
+  assert.notEqual(
+    higherNeed.predictedMinimumSufficientEffort,
+    lowerNeed.predictedMinimumSufficientEffort,
+  );
 });
 
 test("capability profile clamps an unsupported xhigh recommendation", () => {

@@ -55,6 +55,10 @@ disables the broker for that project (Claude runs completely unchanged, with a v
 - If resolution ever loops back to the shim, a recursion guard aborts with a clear error instead of looping.
 - Launch shapes the broker cannot handle safely (`--print`, `--resume`/`--continue`, an uncombinable `--settings`, project opt-out) run Claude completely unchanged with a visible notice.
 
+## Known accepted behavior
+
+On Claude Code 2.1.238, every `/effort` change except `max` also saves that level as your global default (upstream behavior; the broker discloses it on each application). With the autopilot active this is inconsequential — effort is re-decided per prompt — but where the broker does not run (opted-out projects, after uninstall) your default will be whatever level was applied last. Reset it any time with `/effort <level>` in a plain Claude session.
+
 ## Platform support
 
 | Platform | Status |

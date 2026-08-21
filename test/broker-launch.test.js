@@ -8,13 +8,19 @@ import { mergeHookSettings } from "../src/broker/settings-merge.js";
 const HOOK = '"node" "hook.js"';
 
 test("launch args expose settings position, explicit effort, resume, and print facts", () => {
-  const separate = parseClaudeLaunchArgs(["--verbose", "--settings", "C:\\a b\\s.json", "--effort", "high"]);
+  const separate = parseClaudeLaunchArgs([
+    "--verbose",
+    "--settings",
+    "C:\\a b\\s.json",
+    "--effort",
+    "high",
+  ]);
   assert.deepEqual(separate.settings, { value: "C:\\a b\\s.json", index: 1, form: "separate" });
   assert.equal(separate.effort, "high");
   assert.equal(separate.resumesSession, false);
   assert.equal(separate.printMode, false);
 
-  const inline = parseClaudeLaunchArgs(["--settings={\"theme\":\"dark\"}", "--effort=max"]);
+  const inline = parseClaudeLaunchArgs(['--settings={"theme":"dark"}', "--effort=max"]);
   assert.equal(inline.settings.form, "inline");
   assert.equal(inline.settings.value, '{"theme":"dark"}');
   assert.equal(inline.effort, "max");
@@ -99,24 +105,35 @@ test("session effort baseline prefers project-local, then project, then user set
     return files[file];
   };
   const options = { cwd: "C:\\proj", home: "C:\\home", readFile };
-  assert.deepEqual(resolveSessionEffortBaseline(options), { effort: "low", source: "project local settings" });
+  assert.deepEqual(resolveSessionEffortBaseline(options), {
+    effort: "low",
+    source: "project local settings",
+  });
   delete files["C:\\proj\\.claude\\settings.local.json"];
-  assert.deepEqual(resolveSessionEffortBaseline(options), { effort: "max", source: "project settings" });
+  assert.deepEqual(resolveSessionEffortBaseline(options), {
+    effort: "max",
+    source: "project settings",
+  });
   delete files["C:\\proj\\.claude\\settings.json"];
-  assert.deepEqual(resolveSessionEffortBaseline(options), { effort: "high", source: "user settings" });
+  assert.deepEqual(resolveSessionEffortBaseline(options), {
+    effort: "high",
+    source: "user settings",
+  });
 });
 
 test("session effort baseline tolerates a UTF-8 BOM in settings files", () => {
   const readFile = () => `\uFEFF${JSON.stringify({ effortLevel: "medium" })}`;
-  assert.deepEqual(
-    resolveSessionEffortBaseline({ cwd: "C:\\proj", home: "C:\\home", readFile }),
-    { effort: "medium", source: "project local settings" },
-  );
+  assert.deepEqual(resolveSessionEffortBaseline({ cwd: "C:\\proj", home: "C:\\home", readFile }), {
+    effort: "medium",
+    source: "project local settings",
+  });
 });
 
 test("session effort baseline fails open to auto on missing, malformed, or invalid values", () => {
   const cases = [
-    () => { throw new Error("ENOENT"); },
+    () => {
+      throw new Error("ENOENT");
+    },
     () => "{ not json",
     () => JSON.stringify({ effortLevel: "turbo" }),
     () => JSON.stringify({ effortLevel: 3 }),

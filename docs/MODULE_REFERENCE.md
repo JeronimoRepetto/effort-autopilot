@@ -54,7 +54,7 @@
 
 | Path | Responsibility |
 | --- | --- |
-| [`package.json`](../package.json) | Private package metadata; no public executable mappings |
+| [`package.json`](../package.json) | Private (unpublished) scoped package; the installer CLI is the only bin mapping; explicit files whitelist |
 | [`.claude-plugin/plugin.json`](../.claude-plugin/plugin.json) | Manual-only historical skills; no automatic hook |
 | [`skills/`](../skills) | Manual experimental effort skills, not the product |
 

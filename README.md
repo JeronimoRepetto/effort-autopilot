@@ -1,64 +1,79 @@
 # Effort Autopilot
 
-Effort Autopilot is being built as a transparent, globally installed broker in front of the real Claude Code CLI. The intended experience is still the normal interactive `claude` session: a top-level task is classified locally, the chosen effort is applied before inference, and the original task is forwarded once without changing provider, model, or session context.
+**Automatic reasoning-effort selection for the Claude Code CLI.** You keep using `claude` exactly as always; before each task reaches the model, Effort Autopilot classifies it **locally** (zero tokens, zero network) and sets the right `/effort` level — low for trivial asks, xhigh for deep work — without ever changing your model, provider, login, or session.
 
-> **Not published to npm yet.** A reversible installer now exists for use from a repository checkout — see [Installation](docs/INSTALL.md): it shims `claude` on your user PATH with explicit consent, exact backups, and a surgical `uninstall`; your real Claude executable and settings are never modified. The old one-shot launcher has been rejected and removed from npm/package UX; its `--print` transport survives only as internal benchmark/calibration infrastructure.
+> Status: **working end to end on Windows, live-validated, not yet published to npm.** Install today from a repository checkout with the reversible installer — see [Installation](docs/INSTALL.md).
 
-See the evidence-backed [CLI feasibility audit](docs/STOCK_HOST_FEASIBILITY.md). It now records a third, stronger CLI result:
+## How it works today
 
-- a pure PTY byte parser is unsafe because it cannot identify the active composer;
-- `UserPromptSubmit` is an authoritative top-level semantic gate even though it cannot set effort itself;
-- combining that hook with an authenticated in-memory broker and ConPTY can block, classify, acknowledge `/effort`, and authorize one exact replay before the sole model request.
+Claude Code's hooks cannot change the pending turn's effort, and its TUI exposes no safe byte-level control point. Effort Autopilot combines both worlds — a hook for *semantics*, a pseudoterminal for *actuation*:
 
-## Current proof-of-concept state
-
-- Claude Code 2.1.238 `/effort max` was verified without submitting a model prompt; the CLI acknowledged `Set effort level to max (this session only)`.
-- A Windows ConPTY mock proves classifier → effort command → exact acknowledgement → unchanged prompt forwarded once → one synthetic request.
-- An installed-CLI zero-inference diagnostic proved SessionStart model `claude-fable-5`, first-hook block, acknowledged `max`, one-time exact replay, consumed authorization, and a final independent safety block. No model turn occurred.
-- File-verified on 2.1.238: `/effort low|medium|high|xhigh` **always persists the user's saved default** (every path, pinned or not); only `/effort max` is session-scoped, and `/model` persists too. The broker visibly discloses the saved-default side effect on every non-max application; a native session-scoped control is requested upstream.
-- Manual `/effort` precedence and mid-session `/model` ambiguity are tracked from the verified terminal acknowledgements; a user-provided `--settings` document is merged additively, and any launch shape that cannot be combined safely visibly runs Claude unchanged.
-- A transport-free gateway mock proves exact-model preservation and an `output_config.effort`-only mutation before synthetic forwarding.
-- The deterministic classifier remains local, dependency-light, non-AI, non-RAG, and model-aware. A later calibrated replacement (a small local ordinal regression, see [calibration](docs/CALIBRATION.md)) would still make no network or LLM call.
-- A first user-authorized live single-prompt proof ran on 2026-08-21: the first submission was blocked, the trivial prompt classified below the confidence floor, the broker visibly failed open (no effort command), and exactly one model response occurred with saved defaults untouched. The acknowledged automatic-effort branch has live-CLI zero-inference proof but no billable live run yet.
-- No global install, PATH alias, credential access, commit, or push has occurred.
-
-An isolated, reversible test shell is now available for the first live user trial. It shadows `claude` only inside one newly opened PowerShell window; closing that window restores normal command resolution. It does not change the machine PATH, Claude settings files, credentials, provider, or model. See [Isolated user test](docs/ISOLATED_TEST.md).
-
-The hybrid is not visually silent: stock Claude Code deliberately renders a `UserPromptSubmit operation blocked by hook` notice and the original prompt before the broker replay. The hook API has no supported quiet-block flag (`suppressOutput` has no effect). This is an honest UX limitation, not a hidden model turn.
-
-## Broker contract
-
-The intended broker must guarantee:
-
-- classification consumes zero model tokens and makes no network/model call;
-- an explicit user effort choice always wins by default (`manual-wins`); the opt-in `--autopilot autopilot-wins` launch policy instead re-evaluates every prompt automatically, with `/effort <level>`//`/effort auto` still visible and honored as the session's current level;
-- supported automatic effort is positively acknowledged before the task is forwarded;
-- the original task content is unchanged, held only in memory, and forwarded exactly once;
-- provider and exact model are never changed;
-- there is no hidden retry or preliminary inference;
-- status/telemetry contains outcome, model, effort, and prompt-free reason codes only.
-
-Default fail-open behavior is “no automatic change, one normal forward.” Unsupported/ambiguous model, low confidence, classifier failure/timeout, ambiguous terminal state, or missing acknowledgement visibly reports `outcome=unchanged` and uses Claude's already-active/default/user-selected effort. A later optional strict mode may pause, but that is not implemented.
-
-Effort is a behavioral signal rather than a hard token cap, so no design can promise fewer billed tokens for every individual prompt.
-
-## Local development (non-billable)
-
-```powershell
-Set-Location C:\Users\jeron\Desktop\effort-autopilot
-npm install
-npm test
-npm run broker:poc:test
-npm run broker:poc:installed-zero-inference
+```
+you type a task in the normal claude TUI
+  1. a UserPromptSubmit hook identifies it as a real top-level task and blocks it (pre-inference)
+  2. the broker (this tool, owning the terminal via ConPTY) receives it over authenticated local IPC
+  3. a deterministic local classifier scores it → effort tier + confidence   (0 tokens, ~ms)
+  4. the broker types /effort <tier> into your session and waits for the CLI's real acknowledgement
+  5. it re-injects your exact original prompt, authorized for exactly one replay
+  6. the hook lets that single replay through → Claude answers normally, at the right effort
 ```
 
-These commands run local tests only. The installed-CLI diagnostic starts Claude's interface but independently blocks the authorized replay before inference, so it does not use a model turn. Do not globally install this package while the broker remains experimental.
+Everything visible is disclosed in-terminal (which effort was applied and why, or why nothing changed), localized in English or Spanish based on your prompt's language.
 
-Internal benchmark tools and historical pilot data remain available to contributors, but they are not npm binaries or user-facing alternatives. See [Development](docs/DEVELOPMENT.md) and [Visible pilot](docs/PILOT.md).
+### The contract
 
-## Documentation
+- Classification never calls a model or the network and never stores your prompt.
+- Your exact model and provider are never changed; the prompt is forwarded byte-for-byte, exactly once.
+- **Fail-open always**: unknown model, low confidence, classifier timeout, missing acknowledgement, ambiguous state → your prompt goes through unchanged, with a visible reason code.
+- **You stay in charge**: under the default `manual-wins` policy your own `/effort` choice disables automation (`/effort auto` hands it back); the opt-in `autopilot-wins` policy re-evaluates every prompt instead. Policy is chosen at install, per project (`.effort-autopilot.json`), or per launch (`--autopilot`).
+- Reversible by design: the installer shims `claude` on your user PATH with explicit consent and exact backups; `effort-autopilot uninstall` restores everything. Your real Claude binary is never touched.
 
-The [documentation index](docs/README.md) links the [product contract](docs/PRODUCT.md), [architecture](docs/ARCHITECTURE.md), [classifier](docs/CLASSIFIER.md), [CLI feasibility audit](docs/STOCK_HOST_FEASIBILITY.md), [draft upstream proposal](docs/UPSTREAM_CAPABILITY_PROPOSAL.md), [security](docs/SECURITY.md), [module map](docs/MODULE_REFERENCE.md), and internal evaluation/calibration references.
+### What works right now
+
+- Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
+- Reversible global installer (`install` / `uninstall` / `status` / `policy`), Linux implemented (WSL-verified), macOS implemented but unverified.
+- 146 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
+
+### Honest limitations
+
+- Claude Code renders a visible `UserPromptSubmit operation blocked by hook` notice on each intercepted task — the hook API has no quiet block. A [native capability proposal](docs/UPSTREAM_CAPABILITY_PROPOSAL.md) (unsubmitted draft) would remove the artifact entirely.
+- On Claude Code 2.1.238, every `/effort` change except `max` also becomes your saved default (upstream behavior, disclosed on each application). With the autopilot active this is inconsequential; details in [INSTALL.md](docs/INSTALL.md).
+- The current classifier's linguistic patterns cover English and Spanish; other languages safely fail open (unchanged effort) rather than guessing.
+- Effort is a behavioral signal, not a token cap — no per-prompt savings guarantee is claimed until measured by calibration.
+
+## Roadmap
+
+| Phase | What | Status |
+| --- | --- | --- |
+| 1 | Hybrid hook + ConPTY broker, live validation | ✅ done |
+| 2 | Reversible global installer, per-project config, precedence policies | ✅ done |
+| 3 | npm packaging preparation (`@jeronimorepetto/claude-effort-autopilot`) | ✅ prepared, unpublished |
+| 4 | **Multilingual mini-AI**: a frozen, pretrained multilingual embedding model (~100 MB, ONNX, local CPU, ~100 languages) + a tiny ordinal head trained on real calibration data — replacing today's hand-written weights while keeping the zero-token/zero-network contract | infrastructure next |
+| 5 | Calibration pipeline: run benchmark tasks at every effort level, label the minimum sufficient effort, train and evaluate against always-low/medium/high baselines | designed ([CALIBRATION.md](docs/CALIBRATION.md)) |
+| 6 | npm publication ([release checklist](docs/RELEASE_CHECKLIST.md)), macOS verification | gated on explicit authorization |
+
+**The end state**: install once from npm, run `claude` anywhere in any language, and every prompt silently gets the smallest effort that reliably does the job — measured, not guessed — with your manual choice always one `/effort` away.
+
+## Try it
+
+```powershell
+git clone https://github.com/JeronimoRepetto/effort-autopilot.git
+cd effort-autopilot
+npm install
+npm test                                   # 146 local tests, no Claude calls
+node bin/effort-autopilot-cli.js install   # consent-gated, reversible
+# open a NEW terminal, cd into any project, and run: claude
+```
+
+Full guide: [docs/INSTALL.md](docs/INSTALL.md) · Documentation index: [docs/README.md](docs/README.md)
+
+## Project history note
+
+The old one-shot launcher has been rejected as a product and removed from the package surface; its `--print` transport survives only as internal benchmark/calibration infrastructure. The full engineering trail — including the CLI feasibility audit with every live-verified behavior — is in [docs/STOCK_HOST_FEASIBILITY.md](docs/STOCK_HOST_FEASIBILITY.md).
+
+## Support
+
+If this tool saves you time or tokens, a donation is welcome — the funding link will appear here and in the repository's Sponsor button once enabled.
 
 ## License
 

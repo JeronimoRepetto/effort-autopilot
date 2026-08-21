@@ -7,7 +7,11 @@ import { runPilotCli } from "../src/cli/pilot-main.js";
 function sink() {
   let value = "";
   return {
-    stream: { write: (chunk) => { value += chunk; } },
+    stream: {
+      write: (chunk) => {
+        value += chunk;
+      },
+    },
     value: () => value,
   };
 }
@@ -46,7 +50,9 @@ test("dry-run shows routing without invoking Claude", async () => {
     env: {},
     stdout: stdout.stream,
     stderr: sink().stream,
-    runner: async () => { calls += 1; },
+    runner: async () => {
+      calls += 1;
+    },
     metadataCollector,
   });
   assert.equal(calls, 0);
@@ -60,7 +66,9 @@ test("pilot standalone --help does not load a manifest or invoke Claude", async 
   const code = await runPilotCli(["--help"], {
     cwd: "Z:\\path-that-does-not-exist",
     stdout: stdout.stream,
-    runner: async () => { calls += 1; },
+    runner: async () => {
+      calls += 1;
+    },
   });
   assert.equal(code, 0);
   assert.equal(calls, 0);

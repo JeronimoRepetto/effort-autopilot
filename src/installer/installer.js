@@ -1,5 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, chmodSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  chmodSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -48,9 +56,11 @@ export function readWindowsUserPath() {
 }
 
 function writeWindowsUserPath(type, value) {
-  execFileSync("reg.exe", [
-    "add", "HKCU\\Environment", "/v", "Path", "/t", type, "/d", value, "/f",
-  ], { stdio: "ignore" });
+  execFileSync(
+    "reg.exe",
+    ["add", "HKCU\\Environment", "/v", "Path", "/t", type, "/d", value, "/f"],
+    { stdio: "ignore" },
+  );
 }
 
 function broadcastEnvironmentChange() {
@@ -101,8 +111,8 @@ async function askPolicy({ input = process.stdin, output = process.stdout } = {}
   try {
     output.write(
       "Precedence policy:\n" +
-      "  1. manual-wins    — your own /effort choice disables automation (default)\n" +
-      "  2. autopilot-wins — the autopilot re-evaluates every prompt, even over manual choices\n",
+        "  1. manual-wins    — your own /effort choice disables automation (default)\n" +
+        "  2. autopilot-wins — the autopilot re-evaluates every prompt, even over manual choices\n",
     );
     const answer = (await rl.question("Choose [1/2] (1): ")).trim();
     return answer === "2" ? "autopilot-wins" : "manual-wins";
@@ -147,12 +157,12 @@ export async function runInstall({
   const profileFile = platform === "win32" ? null : selectShellProfile({ env, home });
   output.write(
     "Effort Autopilot will:\n" +
-    `  1. create a reversible shim at ${shimPath}\n` +
-    (platform === "win32"
-      ? "  2. prepend that directory to your USER Path (registry HKCU\\Environment; exact backup kept)\n"
-      : `  2. add a marked PATH block to ${profileFile} (backup kept)\n`) +
-    `  3. keep using your real Claude at ${realClaude} — never replaced or renamed\n` +
-    "Everything is undone by 'effort-autopilot uninstall'.\n",
+      `  1. create a reversible shim at ${shimPath}\n` +
+      (platform === "win32"
+        ? "  2. prepend that directory to your USER Path (registry HKCU\\Environment; exact backup kept)\n"
+        : `  2. add a marked PATH block to ${profileFile} (backup kept)\n`) +
+      `  3. keep using your real Claude at ${realClaude} — never replaced or renamed\n` +
+      "Everything is undone by 'effort-autopilot uninstall'.\n",
   );
   if (!assumeYes) {
     if (!input.isTTY) {
@@ -181,11 +191,11 @@ export async function runInstall({
 
   if (platform === "win32") {
     const current = readWindowsUserPath();
-    writeFileSync(pathBackupPath(options), `${JSON.stringify(
-      { savedAt: new Date().toISOString(), ...current },
-      null,
-      2,
-    )}\n`, { encoding: "utf8" });
+    writeFileSync(
+      pathBackupPath(options),
+      `${JSON.stringify({ savedAt: new Date().toISOString(), ...current }, null, 2)}\n`,
+      { encoding: "utf8" },
+    );
     if (!containsPathEntry(current.value, shimDir)) {
       writeWindowsUserPath(current.type, prependPathEntry(current.value, shimDir));
       broadcastEnvironmentChange();
@@ -199,7 +209,7 @@ export async function runInstall({
 
   output.write(
     `Installed (policy: ${policy}). Open a NEW terminal and run 'claude' normally.\n` +
-    "Disable per project with .effort-autopilot.json {\"enabled\": false}.\n",
+      'Disable per project with .effort-autopilot.json {"enabled": false}.\n',
   );
   return 0;
 }
@@ -230,7 +240,7 @@ export async function runUninstall({
   rmSync(shimDir, { recursive: true, force: true });
   output.write(
     "Uninstalled: shim removed and PATH restored. " +
-    `Config and backups remain under ${installRoot(options)} and can be deleted safely.\n`,
+      `Config and backups remain under ${installRoot(options)} and can be deleted safely.\n`,
   );
   return 0;
 }
@@ -255,28 +265,37 @@ export async function runStatus({
   try {
     realClaude = findRealClaudeExecutable({ platform, env });
   } catch {
-    realClaude = null;
+    // stays null: not found is a reportable state, not an error
   }
   const globalPolicy = readGlobalConfig(options).policy ?? null;
-  output.write(`${JSON.stringify({
-    platform,
-    installRoot: installRoot(options),
-    shimPresent,
-    pathActive,
-    installed: shimPresent && pathActive,
-    realClaude,
-    policy: globalPolicy ?? "manual-wins",
-    policySource: globalPolicy ? "global config" : "default",
-  }, null, 2)}\n`);
+  output.write(
+    `${JSON.stringify(
+      {
+        platform,
+        installRoot: installRoot(options),
+        shimPresent,
+        pathActive,
+        installed: shimPresent && pathActive,
+        realClaude,
+        policy: globalPolicy ?? "manual-wins",
+        policySource: globalPolicy ? "global config" : "default",
+      },
+      null,
+      2,
+    )}\n`,
+  );
   return 0;
 }
 
-export async function runSetPolicy(policy, {
-  platform = process.platform,
-  env = process.env,
-  home = os.homedir(),
-  output = process.stdout,
-} = {}) {
+export async function runSetPolicy(
+  policy,
+  {
+    platform = process.platform,
+    env = process.env,
+    home = os.homedir(),
+    output = process.stdout,
+  } = {},
+) {
   if (!AUTOPILOT_POLICIES.includes(policy)) {
     output.write(`Unknown policy '${policy}'. Valid: ${AUTOPILOT_POLICIES.join(", ")}.\n`);
     return 1;

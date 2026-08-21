@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 import process from "node:process";
 
-import {
-  runInstall,
-  runSetPolicy,
-  runStatus,
-  runUninstall,
-} from "../src/installer/installer.js";
+import { runInstall, runSetPolicy, runStatus, runUninstall } from "../src/installer/installer.js";
 
 const HELP = `Effort Autopilot — transparent effort broker for the Claude Code CLI
 

@@ -22,7 +22,7 @@ function defaultReadFile(file) {
 function parseConfigDocument(raw) {
   let parsed;
   try {
-    parsed = JSON.parse(raw.replace(/^﻿/, ""));
+    parsed = JSON.parse(raw.replace(/^\uFEFF/, ""));
   } catch {
     return Object.freeze({ invalid: true });
   }

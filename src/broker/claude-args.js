@@ -51,7 +51,11 @@ export function parseClaudeLaunchArgs(args = []) {
     if (argument === "--settings") {
       settings = { value: args[index + 1] ?? null, index: forwardArgs.length, form: "separate" };
     } else if (argument.startsWith("--settings=")) {
-      settings = { value: argument.slice("--settings=".length), index: forwardArgs.length, form: "inline" };
+      settings = {
+        value: argument.slice("--settings=".length),
+        index: forwardArgs.length,
+        form: "inline",
+      };
     } else if (argument === "--effort") {
       effort = args[index + 1] ?? null;
     } else if (argument.startsWith("--effort=")) {

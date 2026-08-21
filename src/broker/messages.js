@@ -9,7 +9,8 @@
  */
 
 const SPANISH_CHARACTERS = /[áéíóúüñ¿¡]/iu;
-const SPANISH_WORDS = /(?<![\p{L}\p{N}_])(?:que|qué|para|cómo|como|hace|hacer|haz|una|uno|este|esta|esto|con|por|los|las|del|más|pero|también|añade|crea|arregla|revisa|explica|explícame|cambia|funciona|quiero|necesito|ayuda|código|proyecto|archivo|prueba|nuevo|nueva|cuando|dónde|porque|ahora|entonces)(?![\p{L}\p{N}_])/giu;
+const SPANISH_WORDS =
+  /(?<![\p{L}\p{N}_])(?:que|qué|para|cómo|como|hace|hacer|haz|una|uno|este|esta|esto|con|por|los|las|del|más|pero|también|añade|crea|arregla|revisa|explica|explícame|cambia|funciona|quiero|necesito|ayuda|código|proyecto|archivo|prueba|nuevo|nueva|cuando|dónde|porque|ahora|entonces)(?![\p{L}\p{N}_])/giu;
 
 export function detectMessageLanguage(prompt) {
   if (typeof prompt !== "string" || prompt.length === 0) return "en";
@@ -37,7 +38,8 @@ const CATALOG = Object.freeze({
     explicitUserEffort:
       "Effort Autopilot: se mantiene tu elección manual de esfuerzo (explicit-user-effort).",
     applied: (effort, model) => `Effort Autopilot: esfuerzo ${effort} aplicado para ${model}.`,
-    appliedPersistNote: " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
+    appliedPersistNote:
+      " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
     unchanged: (cause) => `Effort Autopilot: esfuerzo automático sin cambios (${cause}).`,
     brokerUnavailable: "Effort Autopilot: esfuerzo automático sin cambios (broker unavailable).",
   }),

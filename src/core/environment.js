@@ -61,8 +61,7 @@ export function collectEnvironmentMetadata(
     platform: platformName(runtimePlatform),
     repositoryFileCount: countGitFiles(resolvedCwd, spawn),
     projectKinds: Object.freeze([...new Set(projectKinds)]),
-    multiProject:
-      Boolean(packageJson?.workspaces) || new Set(projectKinds).size > 1,
+    multiProject: Boolean(packageJson?.workspaces) || new Set(projectKinds).size > 1,
     permissionsSensitive: projectKinds.includes("desktop-app"),
   });
 }

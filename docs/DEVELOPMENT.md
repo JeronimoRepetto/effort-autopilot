@@ -11,7 +11,7 @@ npm test
 npm run broker:poc:test
 ```
 
-`node-pty` 1.1.0 supplies Windows ConPTY and Unix PTY bindings for the broker. It is MIT licensed. The package is marked `private` and has no `bin` mapping. Do not run `npm install --global .`; the interactive entrypoint is restricted to the reversible isolated test and no script permanently replaces or renames the real `claude` executable.
+`node-pty` 1.1.0 supplies Windows ConPTY and Unix PTY bindings for the broker. It is MIT licensed. The package is marked `private` (unpublished) and exposes exactly one executable: the reversible installer CLI (`effort-autopilot` → `bin/effort-autopilot-cli.js`, see [Installation](INSTALL.md)). No script permanently replaces or renames the real `claude` executable; publication requires the [release checklist](RELEASE_CHECKLIST.md).
 
 ## Internal evaluation tools
 

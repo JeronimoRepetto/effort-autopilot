@@ -35,12 +35,15 @@ function publicResponse(coordinator, message) {
     return { ok: true, action: "continue", ...registered };
   }
   if (message.event === "UserPromptSubmit") {
-    return { ok: true, ...coordinator.handleUserPromptSubmit({
-      sessionId: message.sessionId,
-      prompt: message.prompt,
-      promptId: message.promptId,
-      cwd: message.cwd,
-    }) };
+    return {
+      ok: true,
+      ...coordinator.handleUserPromptSubmit({
+        sessionId: message.sessionId,
+        prompt: message.prompt,
+        promptId: message.promptId,
+        cwd: message.cwd,
+      }),
+    };
   }
   if (message.event === "DiagnosticGuard") {
     return { ok: true, action: "observed", diagnosticGuard: true };
@@ -78,15 +81,17 @@ export async function startBrokerIpcServer({
         }
         const response = publicResponse(coordinator, message);
         socket.end(`${JSON.stringify(response)}\n`);
-        queueMicrotask(() => onDecision?.({
-          event: message.event,
-          sessionId: message.sessionId,
-          action: response.action,
-          authorizedReplay: response.authorizedReplay === true,
-          diagnostic: response.diagnostic === true,
-          diagnosticGuard: response.diagnosticGuard === true,
-          ticketId: response.ticketId ?? null,
-        }));
+        queueMicrotask(() =>
+          onDecision?.({
+            event: message.event,
+            sessionId: message.sessionId,
+            action: response.action,
+            authorizedReplay: response.authorizedReplay === true,
+            diagnostic: response.diagnostic === true,
+            diagnosticGuard: response.diagnosticGuard === true,
+            ticketId: response.ticketId ?? null,
+          }),
+        );
         if (response.ticketId) queueMicrotask(() => onBlocked?.({ ticketId: response.ticketId }));
       } catch {
         socket.end(`${JSON.stringify({ ok: false, errorCode: "malformed-message" })}\n`);
@@ -103,7 +108,9 @@ export async function startBrokerIpcServer({
   return Object.freeze({
     endpoint,
     async close() {
-      await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      await new Promise((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       if (process.platform !== "win32") await rm(endpoint, { force: true });
     },
   });

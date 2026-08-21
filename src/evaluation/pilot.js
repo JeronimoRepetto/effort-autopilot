@@ -109,12 +109,13 @@ export function runVerifierProcess({ command, args, cwd, timeoutMs }) {
       if (timer) clearTimeout(timer);
       callback(value);
     };
-    const timer = Number.isFinite(timeoutMs) && timeoutMs > 0
-      ? setTimeout(() => {
-          child.kill();
-          finish(resolve, { exitCode: null, timedOut: true });
-        }, timeoutMs)
-      : null;
+    const timer =
+      Number.isFinite(timeoutMs) && timeoutMs > 0
+        ? setTimeout(() => {
+            child.kill();
+            finish(resolve, { exitCode: null, timedOut: true });
+          }, timeoutMs)
+        : null;
     child.on("error", (error) => finish(reject, error));
     child.on("close", (exitCode) => finish(resolve, { exitCode, timedOut: false }));
   });
@@ -139,7 +140,8 @@ async function prepareWorkspace(task, root, mock, baseCwd) {
 }
 
 async function loadTaskPrompt(task, workspace, mock) {
-  if (mock) return `Public dry-run benchmark task ${task.id}: implement and verify a bounded change.`;
+  if (mock)
+    return `Public dry-run benchmark task ${task.id}: implement and verify a bounded change.`;
   if (!task.promptFile) throw new Error(`task ${task.id} has no promptFile`);
   return readFile(path.resolve(workspace, task.promptFile), "utf8");
 }
@@ -212,10 +214,7 @@ export async function runPilot({
       state.stopReason = "cost-ceiling";
       break;
     }
-    if (
-      maxTotalOutputTokens !== undefined &&
-      state.totalOutputTokens >= maxTotalOutputTokens
-    ) {
+    if (maxTotalOutputTokens !== undefined && state.totalOutputTokens >= maxTotalOutputTokens) {
       state.stopReason = "token-ceiling";
       break;
     }
@@ -253,9 +252,7 @@ export async function runPilot({
         runner,
         onPlan: (plan) => {
           planned = plan;
-          progress(
-            `  effort=${plan.effort} model=${model ?? "preserved-configured-model"}`,
-          );
+          progress(`  effort=${plan.effort} model=${model ?? "preserved-configured-model"}`);
           progress(`  reasons=${plan.reasons.slice(0, 2).join(" | ")}`);
         },
       });
@@ -310,11 +307,12 @@ export async function runPilot({
         }
       }
 
-      state.stopReason = error instanceof ClaudeRateLimitError
-        ? "subscription-limit"
-        : errorCode === "error_max_turns"
-          ? "max-turns"
-          : "launcher-error";
+      state.stopReason =
+        error instanceof ClaudeRateLimitError
+          ? "subscription-limit"
+          : errorCode === "error_max_turns"
+            ? "max-turns"
+            : "launcher-error";
       const errorCost = Number(error?.metadata?.totalCostUsd ?? 0) || 0;
       const errorTokens = outputTokens(error?.metadata?.usage);
       state.totalCostUsd += errorCost;
@@ -411,10 +409,7 @@ export async function recoverVerifiedTerminalTrial({
   const task = tasks.find(({ id }) => id === taskId);
   if (!task) throw new Error(`task is not in the bounded manifest: ${taskId}`);
   const terminal = state.lastError;
-  if (
-    terminal?.taskId !== taskId ||
-    !VERIFIABLE_TERMINAL_CODES.has(terminal?.code)
-  ) {
+  if (terminal?.taskId !== taskId || !VERIFIABLE_TERMINAL_CODES.has(terminal?.code)) {
     throw new Error("checkpoint does not contain a recoverable terminal outcome");
   }
   const source = path.resolve(cwd, task.workspaceSource);
@@ -427,7 +422,7 @@ export async function recoverVerifiedTerminalTrial({
       processRunner,
     });
   } catch {
-    verifier = "fail";
+    // stays "fail": a crashed verifier is a failed verification
   }
   if (verifier !== "pass") {
     state.lastError.verifierOutcome = verifier;

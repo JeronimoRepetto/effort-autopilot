@@ -30,7 +30,8 @@ async function loadModelProfile(filePath, cwd) {
   if (!filePath) return undefined;
   const absolute = path.resolve(cwd, filePath);
   const content = await readFile(absolute, "utf8");
-  if (Buffer.byteLength(content) > MAX_PROFILE_BYTES) throw new Error("model profile exceeds 128 KiB");
+  if (Buffer.byteLength(content) > MAX_PROFILE_BYTES)
+    throw new Error("model profile exceeds 128 KiB");
   const profile = JSON.parse(content);
   if (profile === null || typeof profile !== "object" || Array.isArray(profile)) {
     throw new Error("model profile must contain a JSON object");

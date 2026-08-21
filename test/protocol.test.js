@@ -29,6 +29,6 @@ test("malformed envelopes fail open to auto/default behavior", () => {
 
 test("malformed JSON fails open without error details", () => {
   assert.deepEqual(parseAndClassifyEnvelope("not json"), DEFAULT_FALLBACK);
-  assert.deepEqual(parseAndClassifyEnvelope("{\"prompt\":"), DEFAULT_FALLBACK);
+  assert.deepEqual(parseAndClassifyEnvelope('{"prompt":'), DEFAULT_FALLBACK);
   assert.equal("error" in DEFAULT_FALLBACK, false);
 });

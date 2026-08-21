@@ -69,7 +69,10 @@ test("legacy launcher is internal and package exports no user-facing binary", ()
   const guide = readFileSync(path.join(root, "docs", "CLI.md"), "utf8");
   const readme = readFileSync(path.join(root, "README.md"), "utf8");
   assert.equal(packageJson.private, true);
-  assert.equal(Object.hasOwn(packageJson, "bin"), false);
+  // The installer CLI is the only exposed executable; the legacy launcher
+  // must never gain a bin mapping.
+  assert.deepEqual(Object.keys(packageJson.bin), ["effort-autopilot"]);
+  assert.doesNotMatch(packageJson.bin["effort-autopilot"], /effort-autopilot\.js$|-pilot\.js$/);
   assert.match(guide, /Not an end-user product or fallback/i);
   assert.match(readme, /old one-shot launcher has been rejected/i);
   assert.doesNotMatch(readme, /npm install --global/);
@@ -83,13 +86,10 @@ test("proposed live manifest is pinned, inert, and exactly five public tasks", (
   assert.match(manifest.source.commit, /^[0-9a-f]{40}$/);
   assert.match(manifest.source.sha256, /^[0-9a-f]{64}$/);
   assert.equal(manifest.source.license, "MIT");
-  assert.deepEqual(manifest.tasks.map(({ id }) => id), [
-    "HumanEval/53",
-    "HumanEval/0",
-    "HumanEval/140",
-    "HumanEval/32",
-    "HumanEval/129",
-  ]);
+  assert.deepEqual(
+    manifest.tasks.map(({ id }) => id),
+    ["HumanEval/53", "HumanEval/0", "HumanEval/140", "HumanEval/32", "HumanEval/129"],
+  );
   assert.equal(manifest.tasks.length, 5);
   for (const task of manifest.tasks) {
     assert.match(task.workspaceSource, /^\.effort-autopilot\//);
@@ -134,17 +134,11 @@ test("plugin documentation and manifest truthfully exclude an automatic hook", (
 });
 
 test("stock CLI audit and upstream draft preserve the exact decision boundary", () => {
-  const audit = readFileSync(
-    path.join(root, "docs", "STOCK_HOST_FEASIBILITY.md"),
-    "utf8",
-  );
+  const audit = readFileSync(path.join(root, "docs", "STOCK_HOST_FEASIBILITY.md"), "utf8");
   const manifest = JSON.parse(
     readFileSync(path.join(root, ".claude-plugin", "plugin.json"), "utf8"),
   );
-  const proposal = readFileSync(
-    path.join(root, "docs", "UPSTREAM_CAPABILITY_PROPOSAL.md"),
-    "utf8",
-  );
+  const proposal = readFileSync(path.join(root, "docs", "UPSTREAM_CAPABILITY_PROPOSAL.md"), "utf8");
   assert.match(audit, /plugin hook cannot set the same pending turn's effort/i);
   assert.match(audit, /ANTHROPIC_BASE_URL/);
   assert.match(audit, /pure PTY byte parser is not production-safe/i);
