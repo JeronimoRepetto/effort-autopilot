@@ -77,8 +77,6 @@ If this tool saves you time or tokens, you can support its development — it ge
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jeronimorepetto)
 
-**[☕ ko-fi.com/jeronimorepetto](https://ko-fi.com/jeronimorepetto)**
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
