@@ -63,6 +63,7 @@ After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` 
 4. The only permitted persistent install surface is the reversible installer (`bin/effort-autopilot-cli.js` + `src/installer/`): explicit consent, exact backups, surgical uninstall, never overwriting or renaming the real `claude`. Never add a Claude settings mutation, gateway listener, or unreviewed live proof.
 5. Preserve prompt-free metadata and add failure/privacy/exact-once tests.
 6. Update the feasibility audit and module map, run tests, and inspect git status.
+7. **Mandatory documentation audit after every change** (see `CLAUDE.md`, Rule 1): launch a subagent to sweep `README.md` + all of `docs/` for claims made stale by the change, review its findings, and apply the fixes before (or with) the final commit.
 
 Do not commit `.effort-autopilot/`, `node_modules/`, logs, benchmark payloads, prompt files, or private output.
 
