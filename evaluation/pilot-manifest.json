@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "visible-pilot-5",
+  "description": "Five public-ID placeholders for dry-run flow verification. Live workspace and prompt sources are intentionally not committed.",
+  "tasks": [
+    { "id": "pilot-01" },
+    { "id": "pilot-02" },
+    { "id": "pilot-03" },
+    { "id": "pilot-04" },
+    { "id": "pilot-05" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "effort-autopilot",
+  "version": "0.2.0",
+  "description": "An experimental transparent Claude Code CLI effort broker with local model-aware classification.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "broker:poc:test": "node --test test/broker-turn.test.js test/broker-pty.test.js",
+    "broker:poc:installed-zero-inference": "node scripts/verify-hybrid-broker-no-inference.mjs",
+    "broker:isolated": "node bin/internal-interactive-broker.js",
+    "internal:classify": "node bin/effort-autopilot.js classify",
+    "internal:classify-json": "node bin/effort-autopilot.js classify-json",
+    "internal:pilot:dry-run": "node bin/effort-autopilot-pilot.js dry-run",
+    "pilot:prepare-live": "node scripts/prepare-live-pilot.mjs",
+    "pilot:recover-live": "node scripts/recover-live-pilot.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "validate": "claude plugin validate ."
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeronimoRepetto/effort-autopilot.git"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0"
+  }
+}

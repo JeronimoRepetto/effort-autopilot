@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "effort-autopilot",
+  "displayName": "Effort Autopilot",
+  "version": "0.2.0",
+  "description": "Optional manual effort skills and experimental scaffolding; no automatic hook or same-prompt effort mutation is included.",
+  "author": {
+    "name": "Jeronimo Repetto"
+  },
+  "repository": "https://github.com/JeronimoRepetto/effort-autopilot",
+  "homepage": "https://github.com/JeronimoRepetto/effort-autopilot#readme",
+  "license": "MIT",
+  "keywords": [
+    "effort",
+    "routing",
+    "privacy",
+    "claude-code"
+  ]
+}

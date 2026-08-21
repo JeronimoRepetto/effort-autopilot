@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "effort-autopilot-marketplace",
+  "description": "Official marketplace metadata for the Effort Autopilot Claude Code plugin.",
+  "owner": {
+    "name": "Jeronimo Repetto"
+  },
+  "plugins": [
+    {
+      "name": "effort-autopilot",
+      "source": "./",
+      "description": "Historical manual effort skills for local development only; no automatic hook or product broker.",
+      "version": "0.2.0",
+      "category": "productivity",
+      "tags": [
+        "effort",
+        "privacy",
+        "routing"
+      ]
+    }
+  ]
+}

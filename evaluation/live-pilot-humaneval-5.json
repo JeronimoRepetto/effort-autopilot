@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "humaneval-windows-pilot-5",
+  "description": "Inert five-task OpenAI HumanEval plumbing pilot, ordered from trivial to materially harder. Fixtures are generated locally from a pinned MIT-licensed source.",
+  "source": {
+    "repository": "https://github.com/openai/human-eval",
+    "commit": "6d43fb980f9fee3c892a914eda09951f772ad10d",
+    "dataPath": "data/HumanEval.jsonl.gz",
+    "sha256": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef",
+    "license": "MIT"
+  },
+  "tasks": [
+    {
+      "id": "HumanEval/53",
+      "workspaceSource": ".effort-autopilot/benchmark-fixtures/humaneval/HumanEval-53",
+      "promptFile": "TASK.md",
+      "calibrationStartingEffort": "low",
+      "baselineEffort": "low",
+      "ceiling": "low",
+      "maxTurns": 6,
+      "timeoutMs": 120000,
+      "safeMode": true,
+      "tools": ["Read", "Edit", "Write"],
+      "allowedTools": ["Read", "Edit", "Write"],
+      "protectedFiles": ["verify_task.py", "SOURCE.json"],
+      "verifier": { "command": "python", "args": ["-I", "-B", "verify_task.py"], "timeoutMs": 30000 }
+    },
+    {
+      "id": "HumanEval/0",
+      "workspaceSource": ".effort-autopilot/benchmark-fixtures/humaneval/HumanEval-0",
+      "promptFile": "TASK.md",
+      "calibrationStartingEffort": "low",
+      "baselineEffort": "low",
+      "ceiling": "medium",
+      "maxTurns": 3,
+      "timeoutMs": 180000,
+      "safeMode": true,
+      "tools": ["Read", "Edit", "Write"],
+      "allowedTools": ["Read", "Edit", "Write"],
+      "protectedFiles": ["verify_task.py", "SOURCE.json"],
+      "verifier": { "command": "python", "args": ["-I", "-B", "verify_task.py"], "timeoutMs": 30000 }
+    },
+    {
+      "id": "HumanEval/140",
+      "workspaceSource": ".effort-autopilot/benchmark-fixtures/humaneval/HumanEval-140",
+      "promptFile": "TASK.md",
+      "calibrationStartingEffort": "medium",
+      "baselineEffort": "medium",
+      "ceiling": "medium",
+      "maxTurns": 3,
+      "timeoutMs": 180000,
+      "safeMode": true,
+      "tools": ["Read", "Edit", "Write"],
+      "allowedTools": ["Read", "Edit", "Write"],
+      "protectedFiles": ["verify_task.py", "SOURCE.json"],
+      "verifier": { "command": "python", "args": ["-I", "-B", "verify_task.py"], "timeoutMs": 30000 }
+    },
+    {
+      "id": "HumanEval/32",
+      "workspaceSource": ".effort-autopilot/benchmark-fixtures/humaneval/HumanEval-32",
+      "promptFile": "TASK.md",
+      "calibrationStartingEffort": "medium",
+      "baselineEffort": "medium",
+      "ceiling": "high",
+      "maxTurns": 4,
+      "timeoutMs": 240000,
+      "safeMode": true,
+      "tools": ["Read", "Edit", "Write"],
+      "allowedTools": ["Read", "Edit", "Write"],
+      "protectedFiles": ["verify_task.py", "SOURCE.json"],
+      "verifier": { "command": "python", "args": ["-I", "-B", "verify_task.py"], "timeoutMs": 30000 }
+    },
+    {
+      "id": "HumanEval/129",
+      "workspaceSource": ".effort-autopilot/benchmark-fixtures/humaneval/HumanEval-129",
+      "promptFile": "TASK.md",
+      "calibrationStartingEffort": "high",
+      "baselineEffort": "high",
+      "ceiling": "high",
+      "maxTurns": 5,
+      "timeoutMs": 300000,
+      "safeMode": true,
+      "tools": ["Read", "Edit", "Write"],
+      "allowedTools": ["Read", "Edit", "Write"],
+      "protectedFiles": ["verify_task.py", "SOURCE.json"],
+      "verifier": { "command": "python", "args": ["-I", "-B", "verify_task.py"], "timeoutMs": 30000 }
+    }
+  ]
+}

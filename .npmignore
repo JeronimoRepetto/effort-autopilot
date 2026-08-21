@@ -1,0 +1,24 @@
+node_modules/
+.codegraph/
+.effort-autopilot/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+
+# Internal rejected launcher and benchmark infrastructure. Retained in the
+# repository for calibration/regression, never part of the product tarball.
+bin/effort-autopilot.js
+bin/effort-autopilot-pilot.js
+src/adapters/
+src/cli/
+src/evaluation/
+src/launcher/
+evaluation/
+scripts/prepare-live-pilot.mjs
+scripts/recover-live-pilot.mjs
+docs/CLI.md
+docs/CLAUDE_TRANSPORT.md
+docs/PILOT.md
+docs/LIVE_PILOT_READINESS.md
+docs/ADAPTER_DECISION.md
