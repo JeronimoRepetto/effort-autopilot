@@ -2,15 +2,19 @@
 
 Transparent effort broker for the Claude Code CLI: local zero-token classification chooses `/effort` per prompt via a hook + ConPTY broker. Read `docs/README.md` for the full map; `docs/PRODUCT.md` is the contract.
 
-## Rule 1 — MANDATORY post-change documentation audit
+## Rule 1 — MANDATORY documentation discipline (two moments, both obligatory)
 
-After completing ANY change, improvement, or feature (before the final commit of that work):
+**A. Document immediately, ALWAYS.** The instant any change, improvement, feature, or fix is completed, update the affected documentation as part of that same work — never "later". Documentation is part of the change, not a follow-up task. This applies to every change with observable behavior, without exception.
 
-1. Launch a subagent (Explore/general-purpose) that reads `README.md` and **every** file under `docs/` and reports claims that are now stale, deprecated, or contradicted by the change just made — with file/line and what current reality says. Give it a checklist of what changed.
-2. Review the agent's findings yourself and apply the pertinent fixes (docs must describe only real, current behavior — no aspirational or leftover claims).
-3. Run `npm test` (documentation tests enforce links/index/product boundaries) and include the doc fixes in the same commit or an immediate follow-up.
+**B. Pre-commit/pre-push audit gate — an OBLIGATORY safeguard.** Before ANY `git commit` or `git push` that includes code or behavior changes:
 
-History shows why: phases repeatedly outran their documentation until an audit found 10 stale files, including safety claims stated backwards.
+1. **Launch an audit subagent** (Explore/general-purpose) that reads `README.md` and **every** file under `docs/` and reports claims that are now stale, deprecated, or contradicted by the changes being committed — with file/line and what current reality says. Give it a precise checklist of what changed.
+2. **Review the agent's findings yourself** — do not rubber-stamp them: verify each one, then apply the pertinent fixes (docs must describe only real, current behavior — no aspirational or leftover claims) and discard false positives with a stated reason.
+3. **Run `npm test`** (documentation tests enforce links/index/product boundaries) and include the doc fixes **in the same commit** as the change they describe.
+
+No commit or push of behavior changes is permitted without this gate. Doc-only or comment-only commits are exempt from step B (but not from accuracy).
+
+History shows why this is a safeguard and not bureaucracy: phases repeatedly outran their documentation until an audit found 10 stale files, including safety claims stated backwards.
 
 ## Hard contract (never violate)
 
