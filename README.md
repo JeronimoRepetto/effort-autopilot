@@ -32,7 +32,8 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
 - Reversible global installer (`install` / `uninstall` / `status` / `policy`), Linux implemented (WSL-verified), macOS implemented but unverified.
-- 146 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
+- The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
+- 162 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 
 ### Honest limitations
 
@@ -49,7 +50,7 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 | 2 | Reversible global installer, per-project config, precedence policies | ✅ done |
 | 3 | npm packaging preparation (`@jeronimorepetto/claude-effort-autopilot`) | ✅ prepared, unpublished |
 | 4 | **Multilingual mini-AI**: a frozen, pretrained multilingual embedding model (~100 MB, ONNX, local CPU, ~100 languages) + a tiny ordinal head trained on real calibration data — replacing today's hand-written weights while keeping the zero-token/zero-network contract | ✅ infrastructure built (runtime, trainer, fallback chain, `install --with-ml`); awaits calibration data |
-| 5 | Calibration pipeline: run benchmark tasks at every effort level, label the minimum sufficient effort, train and evaluate against always-low/medium/high baselines | designed ([CALIBRATION.md](docs/CALIBRATION.md)) |
+| 5 | Calibration pipeline: adaptive minimum-sufficient-effort search over benchmark tasks, resumable checkpoints, dataset export, baseline comparison | ✅ built (`npm run calibrate`, mock-verified); the live run is a separately authorized, budgeted decision ([CALIBRATION.md](docs/CALIBRATION.md)) |
 | 6 | npm publication ([release checklist](docs/RELEASE_CHECKLIST.md)), macOS verification | gated on explicit authorization |
 
 **The end state**: install once from npm, run `claude` anywhere in any language, and every prompt silently gets the smallest effort that reliably does the job — measured, not guessed — with your manual choice always one `/effort` away.
