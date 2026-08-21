@@ -1,5 +1,11 @@
 # Calibration roadmap
 
+## Implemented pipeline
+
+The adaptive search below is implemented in [`src/evaluation/calibration.js`](../src/evaluation/calibration.js) with the CLI [`scripts/calibrate.mjs`](../scripts/calibrate.mjs) (`npm run calibrate`). It forces executions at explicit effort levels (classifier bypassed), walks down from the task's starting hint after reliable success and up after failure, repeats runs at the boundary (`--repeats`/`--required-passes`), checkpoints every trial atomically, and resumes without repeating completed tasks. Budget ceilings (`--max-total-output-tokens`, `--max-total-cost-usd`, `--max-trials-per-task`) and subscription-limit stops are first-class and honest (`stopReason`, per-task statuses, baseline coverage gaps reported instead of extrapolated). `--export-dataset` writes `{taskId, split, label, prompt}` JSONL with a deterministic 70/15/15 hash split for `npm run ml:train` — only to ignored local paths; the dataset is never committed or published.
+
+Mock mode (`npm run calibrate`) is free and local. **Live mode requires both `--live` and `--confirm-subscription-use`** and has not been executed; running it is a separately authorized decision with an agreed budget.
+
 ## Objective
 
 Predict the minimum sufficient effort for a task on a specific active model family/version while minimizing expected token cost and latency subject to a quality threshold.

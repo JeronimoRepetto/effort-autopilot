@@ -80,7 +80,11 @@ async function protectedFilesIntact(task, source, workspace) {
   return true;
 }
 
-async function runVerifier(task, workspace, { mock, source, processRunner = runVerifierProcess }) {
+export async function runVerifier(
+  task,
+  workspace,
+  { mock, source, processRunner = runVerifierProcess },
+) {
   if (mock) return task.mockVerifierPass === false ? "fail" : "pass";
   if (!(await protectedFilesIntact(task, source, workspace))) return "fail";
   const command = task.verifier?.command;
@@ -121,7 +125,7 @@ export function runVerifierProcess({ command, args, cwd, timeoutMs }) {
   });
 }
 
-async function prepareWorkspace(task, root, mock, baseCwd) {
+export async function prepareWorkspace(task, root, mock, baseCwd) {
   const workspace = path.join(root, safeName(task.id));
   await mkdir(path.dirname(workspace), { recursive: true });
   if (mock) {
@@ -139,7 +143,7 @@ async function prepareWorkspace(task, root, mock, baseCwd) {
   return { workspace, source: path.resolve(baseCwd, task.workspaceSource) };
 }
 
-async function loadTaskPrompt(task, workspace, mock) {
+export async function loadTaskPrompt(task, workspace, mock) {
   if (mock)
     return `Public dry-run benchmark task ${task.id}: implement and verify a bounded change.`;
   if (!task.promptFile) throw new Error(`task ${task.id} has no promptFile`);

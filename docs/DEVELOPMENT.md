@@ -5,7 +5,7 @@
 Requirements: Node.js 20+. Claude Code 2.1.238 was used for the non-inference command audit, but normal tests do not launch it.
 
 ```powershell
-Set-Location C:\Users\jeron\Desktop\effort-autopilot
+Set-Location <path-to-your-clone>\effort-autopilot
 npm install
 npm test
 npm run broker:poc:test

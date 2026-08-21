@@ -48,6 +48,7 @@
     "pilot:recover-live": "node scripts/recover-live-pilot.mjs",
     "lint": "eslint .",
     "ml:train": "node scripts/train-ordinal-head.mjs",
+    "calibrate": "node scripts/calibrate.mjs",
     "format": "prettier --write \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
     "format:check": "prettier --check \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
     "test": "node scripts/run-tests.mjs",

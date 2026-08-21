@@ -53,6 +53,8 @@
 | [`src/cli/pilot-main.js`](../src/cli/pilot-main.js) | Internal pilot runner CLI |
 | [`bin/effort-autopilot.js`](../bin/effort-autopilot.js) | Internal direct script retained for tests/calibration only |
 | [`bin/effort-autopilot-pilot.js`](../bin/effort-autopilot-pilot.js) | Internal pilot script, not packaged as a bin |
+| [`src/evaluation/calibration.js`](../src/evaluation/calibration.js) | Adaptive minimum-sufficient-effort search, resumable checkpoints, dataset export, honest baseline summary |
+| [`scripts/calibrate.mjs`](../scripts/calibrate.mjs) | Calibration CLI (`npm run calibrate`); live mode double-gated behind `--live --confirm-subscription-use` |
 | [`evaluation/`](../evaluation) | Public benchmark references/manifests, no private prompts |
 
 ## Packaging and experimental plugin
@@ -79,6 +81,7 @@
 | [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain |
 | [`test/ordinal-head.test.js`](../test/ordinal-head.test.js) | Artifact validation, probability sanity, tier monotonicity, synthetic training convergence and determinism |
 | [`test/learned-classifier.test.js`](../test/learned-classifier.test.js) | Decision-contract fidelity, profile clamping, and the full deterministic fallback chain with fake embedders |
+| [`test/calibration.test.js`](../test/calibration.test.js) | Adaptive search correctness, boundary repeats, resume idempotence, budget/limit stops, dataset export, baseline honesty |
 | [`test/session-observer.test.js`](../test/session-observer.test.js) | Manual `/effort` and `/model` acknowledgement attribution, broker-window suppression, chunk splits |
 | [`test/gateway-transform.test.js`](../test/gateway-transform.test.js) | Effort-only body mutation, exact model, failure modes, stream bytes, privacy |
 | [`test/classifier.test.js`](../test/classifier.test.js) | Six tiers, boundaries, multilingual and model-aware regression |

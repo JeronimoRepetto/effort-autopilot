@@ -36,7 +36,7 @@ The trial limit must be `1..10` and defaults to 5. Live mode requires both confi
 ## Visible PowerShell dry-run
 
 ```powershell
-Start-Process powershell -ArgumentList '-NoExit','-Command',"Set-Location 'C:\Users\jeron\Desktop\effort-autopilot'; effort-autopilot-pilot dry-run --max-runs 5"
+Start-Process powershell -ArgumentList '-NoExit','-Command',"Set-Location '<path-to-your-clone>\effort-autopilot'; effort-autopilot-pilot dry-run --max-runs 5"
 ```
 
 The mock runner makes no network or Claude call and reports zero tokens/cost. Progress prints benchmark and task ID, selected effort, model label, concise reasons, verifier pass/fail, elapsed milliseconds, turns, token metrics, and cost estimate. It never prints the task prompt.
