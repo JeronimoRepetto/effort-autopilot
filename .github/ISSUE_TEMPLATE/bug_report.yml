@@ -1,0 +1,61 @@
+name: Bug report
+description: Something broke or behaved unexpectedly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Effort Autopilot is a beta. The details below let us reproduce quickly.
+        **Never paste your prompts' private content** — describe them instead.
+  - type: input
+    id: claude-version
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version` (or the version shown in the welcome box)
+      placeholder: "2.1.238"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 10/11
+        - macOS (unverified platform)
+        - Linux
+        - Linux (WSL)
+    validations:
+      required: true
+  - type: input
+    id: ea-version
+    attributes:
+      label: Effort Autopilot version / commit
+      placeholder: "v0.3.0-beta.1"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the Effort Autopilot status lines you saw (e.g. "applied xhigh…", "unchanged (insufficient-confidence)").
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: status-output
+    attributes:
+      label: Output of `effort-autopilot status`
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I ran `effort-autopilot uninstall` and confirmed plain `claude` works, so the issue is specific to the broker
+        - label: This report contains no private prompt content
+          required: true

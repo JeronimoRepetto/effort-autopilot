@@ -1,6 +1,6 @@
 {
   "name": "@jeronimorepetto/claude-effort-autopilot",
-  "version": "0.3.0",
+  "version": "0.3.0-beta.1",
   "description": "Transparent effort broker for the Claude Code CLI: classifies each prompt locally (zero tokens, no network) and applies the right effort level before inference, without changing model, provider, or session.",
   "type": "module",
   "private": true,

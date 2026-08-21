@@ -1,0 +1,25 @@
+name: Feature request
+description: Propose an improvement or new capability
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that the tool doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Contract check
+      description: >
+        Effort Autopilot promises: zero tokens / zero network at classification, exact model and
+        prompt preserved, fail-open on any doubt, user choice wins. If your proposal touches any
+        of these, say how it stays compatible.

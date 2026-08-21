@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/JeronimoRepetto/effort-autopilot/blob/main/docs/README.md
+    about: Product contract, installation, architecture, and troubleshooting guides
+  - name: Support the project
+    url: https://ko-fi.com/jeronimorepetto
+    about: Donations keep the open-source work going
