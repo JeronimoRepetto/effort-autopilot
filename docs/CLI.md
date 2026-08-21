@@ -1,16 +1,18 @@
 # Internal legacy launcher CLI
 
-> **Not an end-user product or fallback.** The user rejected this one-shot UX. The package exports no launcher binary; this document exists only for internal benchmark and regression reproducibility.
+> **Not an end-user product or fallback.** The user rejected this one-shot UX. The package exports no launcher binary — the `effort-autopilot` bin name belongs to the **installer CLI** (`bin/effort-autopilot-cli.js`, see [INSTALL.md](INSTALL.md)). This launcher is invoked only as `node bin/effort-autopilot.js …` (or the `internal:*` npm scripts) and exists for internal benchmark and regression reproducibility.
 
 ## Commands
 
 ```text
-effort-autopilot [options] "prompt"
-effort-autopilot run [options] "prompt"
-effort-autopilot --stdin [options]
-effort-autopilot classify < prompt.txt
-effort-autopilot classify-json < envelope.json
+node bin/effort-autopilot.js [options] "prompt"
+node bin/effort-autopilot.js run [options] "prompt"
+node bin/effort-autopilot.js --stdin [options]
+node bin/effort-autopilot.js classify < prompt.txt
+node bin/effort-autopilot.js classify-json < envelope.json
 ```
+
+Only `run` without `--dry-run` starts Claude (billable); `classify`, `classify-json`, and `--dry-run` are free and local.
 
 `run` is optional and one-shot. `classify` treats all stdin as the prompt. `classify-json` accepts the host-neutral envelope and safely returns the fallback object for malformed input.
 
@@ -42,14 +44,14 @@ Environment defaults are `EFFORT_AUTOPILOT_CEILING` and `EFFORT_AUTOPILOT_BASELI
 Argument prompts are joined with spaces. Use `--stdin` for multi-line tasks and to avoid shell quoting. `--` ends option parsing when prompt text begins with a dash. Input is limited to 1 MiB. Empty input, conflicting stdin/argument input, unknown flags, invalid effort values, and invalid numeric values fail before Claude starts.
 
 ```powershell
-Get-Content .\task.txt -Raw | effort-autopilot --stdin --ceiling medium
-effort-autopilot -- --prompt-text-that-begins-with-a-dash
+Get-Content .\task.txt -Raw | node bin/effort-autopilot.js --stdin --ceiling medium
+node bin/effort-autopilot.js -- --prompt-text-that-begins-with-a-dash
 ```
 
 On macOS or Linux:
 
 ```sh
-effort-autopilot --stdin --ceiling medium < task.txt
+node bin/effort-autopilot.js --stdin --ceiling medium < task.txt
 ```
 
 The process adapter uses an argument array with shell execution disabled, so paths and model IDs are not reinterpreted by a shell.
