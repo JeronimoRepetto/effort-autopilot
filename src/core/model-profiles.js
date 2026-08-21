@@ -9,7 +9,7 @@
  */
 
 export const MODEL_PROFILE_SCHEMA_VERSION = 1;
-export const MODEL_PROFILE_CATALOG_VERSION = "2026-08-21.bootstrap.1";
+export const MODEL_PROFILE_CATALOG_VERSION = "2026-08-21.bootstrap.2";
 
 const OFFICIAL_PROVENANCE = Object.freeze({
   modelConfiguration: "https://code.claude.com/docs/en/model-config",
@@ -55,6 +55,15 @@ export const MODEL_PROFILES = Object.freeze({
     effortCap: "max",
     effortOffset: 0,
   }),
+  "claude-opus-5": profile({
+    id: "claude-opus-5",
+    family: "opus",
+    capabilityTier: "strong",
+    aliases: [],
+    supportedEfforts: ["low", "medium", "high", "xhigh", "max"],
+    effortCap: "max",
+    effortOffset: -1,
+  }),
   "claude-fable-5": profile({
     id: "claude-fable-5",
     family: "fable",
@@ -74,7 +83,10 @@ export const MODEL_PROFILES = Object.freeze({
  */
 export function resolveBundledModelProfile(modelId) {
   if (typeof modelId !== "string" || modelId.trim() === "") return null;
-  const normalized = modelId.trim().toLowerCase();
+  // A trailing "[1m]" marks the 1M-context variant of the same snapshot
+  // (observed live: SessionStart reported "claude-opus-5[1m]"). Context size
+  // does not change the effort ladder, so the base profile applies.
+  const normalized = modelId.trim().toLowerCase().replace(/\[1m\]$/, "");
   if (MODEL_PROFILES[normalized]) return MODEL_PROFILES[normalized];
   return Object.values(MODEL_PROFILES).find(({ aliases }) => aliases.includes(normalized)) ?? null;
 }

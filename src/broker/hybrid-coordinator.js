@@ -1,16 +1,26 @@
 import { randomUUID } from "node:crypto";
 
 import { resolveBundledModelProfile } from "../core/model-profiles.js";
+import { brokerMessages } from "./messages.js";
 import { brokerTurn } from "./turn-controller.js";
 import { ReplayAuthorizations } from "./replay-authorizations.js";
 
 const MAX_PROMPT_BYTES = 1024 * 1024;
 
-function replaySystemMessage(metadata) {
+function replaySystemMessage(messages, metadata, rawModel = null) {
   if (metadata?.outcome === "applied") {
-    return `Effort Autopilot: applied ${metadata.appliedEffort} for ${metadata.model}.`;
+    // A dialog-confirmed change persists the CLI's saved default effort — an
+    // upstream side effect the broker cannot scope, so it is disclosed.
+    const dialogNote = metadata.viaConfirmationDialog ? messages.appliedDialogNote : "";
+    return `${messages.applied(metadata.appliedEffort, metadata.model)}${dialogNote}`;
   }
-  return `Effort Autopilot: automatic effort unchanged (${metadata?.cause ?? "unknown"}).`;
+  const cause = metadata?.cause ?? "unknown";
+  // Naming the unsupported model id (never prompt content) lets the user see
+  // which profile is missing instead of guessing.
+  const detail = cause === "unsupported-or-ambiguous-model" && rawModel
+    ? `${cause}: ${rawModel}`
+    : cause;
+  return messages.unchanged(detail);
 }
 
 export class HybridBrokerCoordinator {
@@ -29,6 +39,7 @@ export class HybridBrokerCoordinator {
     const exactProfile = resolveBundledModelProfile(model);
     this.sessions.set(sessionId, {
       model: exactProfile?.id ?? null,
+      rawModel: typeof model === "string" && model ? model : null,
       modelReliable: Boolean(exactProfile),
       cwd,
       explicitUserEffort: false,
@@ -45,10 +56,19 @@ export class HybridBrokerCoordinator {
     return true;
   }
 
+  clearUserEffort(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (!session) return false;
+    session.explicitUserEffort = false;
+    session.activeEffort = null;
+    return true;
+  }
+
   markModelAmbiguous(sessionId) {
     const session = this.sessions.get(sessionId);
     if (!session) return false;
     session.model = null;
+    session.rawModel = null;
     session.modelReliable = false;
     return true;
   }
@@ -75,10 +95,23 @@ export class HybridBrokerCoordinator {
       });
     }
 
+    const messages = brokerMessages(prompt);
+
+    // An explicit user effort never needs routing: the session keeps the
+    // user's choice and the prompt passes through without a block/replay.
+    if (this.sessions.get(sessionId)?.explicitUserEffort) {
+      return Object.freeze({
+        action: "allow",
+        authorizedReplay: false,
+        explicitUserEffort: true,
+        systemMessage: messages.explicitUserEffort,
+      });
+    }
+
     if ([...this.pending.values()].some((ticket) => ticket.sessionId === sessionId)) {
       return Object.freeze({
         action: "block",
-        reason: "Effort Autopilot is still routing the previous task.",
+        reason: messages.busy,
         authorizedReplay: false,
         busy: true,
       });
@@ -95,7 +128,7 @@ export class HybridBrokerCoordinator {
     this.pending.set(ticket.id, ticket);
     return Object.freeze({
       action: "block",
-      reason: "Effort Autopilot is applying local effort before this task.",
+      reason: messages.applying,
       authorizedReplay: false,
       ticketId: ticket.id,
     });
@@ -135,7 +168,11 @@ export class HybridBrokerCoordinator {
         minimumConfidence,
         forwardPrompt: async (prompt, metadata) => {
           armed = this.authorizations.arm(ticket.sessionId, prompt, {
-            systemMessage: replaySystemMessage(metadata),
+            systemMessage: replaySystemMessage(
+              brokerMessages(prompt),
+              metadata,
+              session.rawModel ?? null,
+            ),
           });
           try {
             await reinjectPrompt(prompt);

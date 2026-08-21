@@ -17,7 +17,7 @@ function unchangedMetadata(cause, model, activeEffort) {
   });
 }
 
-function appliedMetadata(plan, model, activeEffort) {
+function appliedMetadata(plan, model, activeEffort, viaConfirmationDialog) {
   return Object.freeze({
     outcome: "applied",
     cause: "automatic-effort-acknowledged",
@@ -25,6 +25,7 @@ function appliedMetadata(plan, model, activeEffort) {
     requestedEffort: plan.effort,
     appliedEffort: plan.effort,
     activeEffort: activeEffort ?? null,
+    viaConfirmationDialog: viaConfirmationDialog === true,
     promptForwarded: true,
   });
 }
@@ -133,7 +134,7 @@ export async function brokerTurn({
     return finishUnchanged("effort-not-acknowledged");
   }
 
-  const metadata = appliedMetadata(plan, activeModel, activeEffort);
+  const metadata = appliedMetadata(plan, activeModel, activeEffort, acknowledgement.viaDialog);
   await forwardOnce(metadata);
   await onStatus?.(metadata);
   return metadata;

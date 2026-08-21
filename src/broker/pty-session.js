@@ -80,22 +80,50 @@ export class PtySession {
     // the pre-command buffer can become invalid while the command is running.
     this.buffer = "";
     this.child.write(`/effort ${effort}\r`);
+    const ackPattern = new RegExp(`Set effort level to ${effort}(?:\\s|\\(|$)`, "i");
+    // Mid-conversation escalations render a Yes/No confirmation (cache would
+    // be invalidated). The broker initiated the change, so it confirms the
+    // highlighted "Yes" itself; the user's stdin stays paused during routing.
+    const dialogPattern = /Change effort level\?/i;
+    // Post-confirmation the CLI may only redraw the composer status line
+    // instead of printing the textual acknowledgement.
+    const statusPattern = new RegExp(`[●◈]\\s*${effort}\\s*·`, "i");
+    const dismissModal = async () => {
+      this.child.write("\u001b"); // Esc
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    };
     try {
       await this.waitFor(
-        new RegExp(`Set effort level to ${effort}(?:\\s|\\(|$)`, "i"),
+        new RegExp(`${ackPattern.source}|${dialogPattern.source}`, "i"),
         this.acknowledgementTimeoutMs,
         { normalize: true },
       );
-      const acknowledgement = terminalText(this.buffer);
-      return {
-        acknowledged: new RegExp(`Set effort level to ${effort}(?:\\s|\\(|$)`, "i").test(
-          acknowledgement,
-        ),
-        effort,
-      };
     } catch {
+      // Neither acknowledgement nor a known dialog: dismiss any unrecognized
+      // modal so the fail-open reinjection cannot type into it.
+      await dismissModal();
       return { acknowledged: false, effort: null };
     }
+    const firstResponse = terminalText(this.buffer);
+    let viaDialog = false;
+    if (!ackPattern.test(firstResponse) && dialogPattern.test(firstResponse)) {
+      viaDialog = true;
+      this.buffer = "";
+      this.child.write("\r");
+      try {
+        await this.waitFor(
+          new RegExp(`${ackPattern.source}|${statusPattern.source}`, "i"),
+          this.acknowledgementTimeoutMs,
+          { normalize: true },
+        );
+      } catch {
+        await dismissModal();
+        return { acknowledged: false, effort: null };
+      }
+    }
+    // viaDialog is disclosed upstream: a dialog-confirmed change persists the
+    // CLI's saved default (verified 2.1.238), unlike the direct command path.
+    return { acknowledged: true, effort, viaDialog };
   }
 
   async forwardPrompt(prompt) {

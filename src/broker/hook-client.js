@@ -1,4 +1,5 @@
 import { callBrokerIpc } from "./ipc.js";
+import { brokerMessages } from "./messages.js";
 
 export async function handleClaudeHookInput(input, {
   endpoint,
@@ -7,7 +8,7 @@ export async function handleClaudeHookInput(input, {
   timeoutMs = 500,
 } = {}) {
   const unchangedWarning = {
-    systemMessage: "Effort Autopilot: automatic effort unchanged (broker unavailable).",
+    systemMessage: brokerMessages(input?.prompt).brokerUnavailable,
   };
   try {
     if (input === null || typeof input !== "object") return {};

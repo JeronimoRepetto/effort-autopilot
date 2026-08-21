@@ -26,6 +26,15 @@ test("mutable aliases and unsupported models safely decline calibration", () => 
   assert.equal(resolveBundledModelProfile("custom-provider-model"), null);
 });
 
+test("Opus 5 and its 1M-context variant resolve to one pinned profile", () => {
+  const strong = resolveBundledModelProfile("claude-opus-5");
+  assert.equal(strong.capabilityTier, "strong");
+  assert.equal(strong.effortCap, "max");
+  // Observed live on 2.1.238: SessionStart reports "claude-opus-5[1m]".
+  assert.equal(resolveBundledModelProfile("claude-opus-5[1m]").id, "claude-opus-5");
+  assert.equal(resolveBundledModelProfile("opus"), null);
+});
+
 test("a dated immutable Haiku API alias resolves to its pinned snapshot", () => {
   assert.equal(
     resolveBundledModelProfile("claude-haiku-4-5").id,

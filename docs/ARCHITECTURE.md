@@ -97,7 +97,7 @@ This is supported with `ANTHROPIC_BASE_URL` and a saved claude.ai login, but a r
 
 ## Model and effort ownership
 
-Exact model is an input, never an output. `SessionStart` supplied `claude-fable-5` in the installed proof. Official docs say that field is optional and does not update after `/model`; therefore production must positively track a later exact model or mark the session ambiguous and fail open. That mid-session tracker is not yet implemented.
+Exact model is an input, never an output. `SessionStart` supplies the exact id (`claude-opus-5[1m]` in the clean-environment proof). Official docs say that field is optional and does not update after `/model`; the session observer therefore marks the session ambiguous when the `⎿ Set model to …` acknowledgement appears, and every later prompt fails open until a new `SessionStart` supplies an exact model again.
 
 Explicit effort sources outrank automation. Ultracode remains separate orchestration and is suppressed. Unsupported profile/effort mappings are unchanged rather than guessed.
 

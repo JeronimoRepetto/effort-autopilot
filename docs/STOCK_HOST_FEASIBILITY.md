@@ -81,6 +81,27 @@ Set effort level to max (this session only)
 
 The status displayed `max`, then the session exited without a task. No model prompt was submitted. This verifies the local command and visible acknowledgement, not interception.
 
+### Verified effort/model persistence and session scoping (2026-08-21)
+
+Guarded zero-inference probes on the same 2.1.238 build, including a scope matrix that read the saved `effortLevel` file after every command, converged on this model of which paths persist the saved default:
+
+- **Programmatic single-write submission** (the broker's path: `/effort <level>` plus carriage return in one write) is session-scoped: it acknowledged `(this session only)` whenever the level differed from the saved default. When the level equals the saved default it prints the `saved as your default` wording with no observable change.
+- **Interactive paths persist**: typing the command through the live composer/menu changed the saved file on every probe step; the bare `/effort` picker persists; and the mid-conversation escalation confirmation dialog persists (observed live: confirming `xhigh` rewrote the user's saved default).
+- `/model sonnet` acknowledged `Set model to Sonnet 5 and saved as your default for new sessions` and persisted `model`.
+- `/effort auto` acknowledges `Effort level set to auto` (different wording), and `--effort auto` is accepted as a spawn flag.
+- The composer renders a `● <level> · /effort` status line; under `auto` it displays the resolved level, not the word `auto`.
+
+The interactive broker still spawns the child with an explicit `--effort` scope pin (the user's own flag when given, otherwise the local `effortLevel` from project-local/project/user settings, otherwise `auto`): every session-scoped observation so far was made with a pin present, the pin reproduces the effort the session would have had anyway, and it keeps the session's starting level known for the same-level skip. Settings files are read tolerating a UTF-8 BOM, which Windows tooling commonly writes.
+
+One persistence path remains outside the pin: in a live pinned broker session on 2026-08-21, the bare `/effort` **picker** (no argument) acknowledged `saved as your default for new sessions` and persisted the chosen level into the user's settings. The broker cannot intercept or scope that interactive UI; it only observes the acknowledgement and registers the explicit user choice. This is a documented honest limitation of the stock CLI, not broker behavior.
+
+Two further live behaviors shape `applyEffort`:
+
+- **Escalation confirmation dialog.** Once a conversation has history, `/effort <higher>` renders a `Change effort level?` Yes/No dialog (cache for the current effort would be invalidated) instead of applying immediately. The broker initiated the change, so it confirms the highlighted "Yes" itself and then accepts either the textual acknowledgement or the redrawn `● <level> · /effort` status line as proof. If neither arrives, it sends one Esc to dismiss any modal **before** the fail-open reinjection — in the first live test the reinjected prompt had been swallowed by exactly such an unhandled dialog. A second live user test confirmed the handled flow end to end: block → silent dialog confirmation → `applied xhigh` → one forwarded prompt and one model response. **Known side effect:** a dialog-confirmed change persists the CLI's saved default effort (verified live — the user's saved level was rewritten). The broker cannot scope that upstream behavior; it discloses it in the visible status (`The CLI's confirmation also saved this level as your default.`). A native session-scoped effort control remains the correct upstream fix and is the strongest item in the draft proposal.
+
+Launch-time precedence policy: the broker consumes its own `--autopilot manual-wins|autopilot-wins` flag (never forwarded to the CLI). The default `manual-wins` latches any observed manual `/effort` as authoritative; `autopilot-wins` re-evaluates every prompt while still tracking the manual choice as the session's current level. `/effort auto` under `manual-wins` hands control back to the broker.
+- **Same-level no-op skip.** Re-sending the already-active level was observed to acknowledge `saved as your default for new sessions` even in a pinned session. The broker tracks the session's known active level (spawn pin, acknowledged applications, observed manual choices) and skips the command entirely when the classifier's choice is already active.
+
 ### Why the hybrid avoids the PTY state blocker
 
 A pure PTY broker must choose:
@@ -138,7 +159,11 @@ Wrong/stale tokens, oversized messages, IPC timeout, coordinator failure, expire
 
 ### Model tracking
 
-`SessionStart` supplied exact model in the installed diagnostic and can seed a broker without inference. Official hooks docs say the field is optional and that it does not update when `/model` changes during a session. Mid-session exact-model tracking is therefore still a release blocker: until a later exact model can be positively observed, the broker must mark that session ambiguous and leave effort unchanged. It must not infer an exact version from an alias or picker rendering.
+`SessionStart` supplied exact model in the installed diagnostic and can seed a broker without inference. Official hooks docs say the field is optional and that it does not update when `/model` changes during a session. The broker now watches terminal output for the verified `⎿ Set model to …` acknowledgement and marks the session's model ambiguous when it appears; from then on every prompt forwards unchanged until a new `SessionStart` supplies an exact model again. It never infers an exact version from an alias or picker rendering. All observer patterns require the TUI's `⎿` result marker, so assistant text or displayed documentation that merely quotes the acknowledgement wording is not read as a real command.
+
+Two live findings from the first user test (2026-08-21) matter here. First, a clean-environment `SessionStart` reported `"model": "claude-opus-5[1m]"` — an exact id with a 1M-context suffix; the bundled catalog now includes a Claude Opus 5 profile and strips the `[1m]` variant marker before lookup. Until then every prompt correctly but uselessly forwarded as `unsupported-or-ambiguous-model`; that status now names the unresolved model id (prompt-free) so a missing profile is visible instead of silent. Second, diagnostics launched from inside another Claude Code session inherit `CLAUDE_CODE_*` child-session environment and can report the parent session's model — clean-environment verification is required before trusting any model-identity observation.
+
+Manual `/effort` precedence uses the same observable channel: acknowledgements produced outside the broker's own application window (`Set effort level to <level>` in either scope variant) register an explicit user effort that wins from then on, and `Effort level set to auto` clears it so automation can resume. Attribution errs toward the user: a re-rendered copy of an older broker acknowledgement, or assistant text quoting the acknowledgement wording, can at worst disable automation visibly — never apply an effort. A `--effort` launch flag registers explicit user effort at `SessionStart`, and such prompts are allowed directly without a block/replay cycle.
 
 ### Fail-open contract
 
@@ -172,8 +197,8 @@ If broker IPC is unavailable, the hook returns a prompt-free `systemMessage` tha
 
 - **Transparent CLI mechanism:** the hook/ConPTY hybrid is technically feasible and preserves the same stock session with no preliminary model call.
 - **Truthful UX:** the first hook block is visibly rendered; the current API cannot make it silent.
-- **Release blockers:** reversible global shim/hook installation, mid-session exact-model and explicit-user-effort tracking, runtime input-relay wiring, crash cleanup, and cross-platform proof.
-- **Live boundary:** a single real prompt proof is mechanically ready but has not been authorized in this architecture phase.
+- **Release blockers:** reversible global shim/hook installation, a live single-prompt proof, and cross-platform proof. Mid-session model ambiguity marking, explicit-user-effort tracking (terminal acknowledgement observer plus `--effort` flag precedence), session-scope effort pinning, user `--settings` merging with a visible passthrough fallback, runtime input-relay wiring, and crash cleanup are implemented and covered by local tests plus a zero-inference installed-CLI harness.
+- **Live boundary:** a user-authorized single live prompt ran through the full broker on 2026-08-21. Observed: first-submission block, local classification below the confidence floor (0.37 for a deliberately trivial prompt), visible fail-open with no effort command, exactly one authorized replay, one model response, and no saved-default mutation. The applied-effort branch remains proven only under zero-inference guards; the user's interactive isolated test is the next live surface.
 - **Current code:** hybrid broker POC, synthetic gateway transform, classifier, and internal benchmarks. No global install, persistent settings mutation, live prompt, commit, or push.
 
 The next product choice is whether the transparent stock CLI gateway is acceptable despite being a local request proxy, or whether to wait for the native hook capability in the draft proposal.

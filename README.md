@@ -15,9 +15,12 @@ See the evidence-backed [CLI feasibility audit](docs/STOCK_HOST_FEASIBILITY.md).
 - Claude Code 2.1.238 `/effort max` was verified without submitting a model prompt; the CLI acknowledged `Set effort level to max (this session only)`.
 - A Windows ConPTY mock proves classifier → effort command → exact acknowledgement → unchanged prompt forwarded once → one synthetic request.
 - An installed-CLI zero-inference diagnostic proved SessionStart model `claude-fable-5`, first-hook block, acknowledged `max`, one-time exact replay, consumed authorization, and a final independent safety block. No model turn occurred.
+- A guarded probe proved that on 2.1.238 an **unpinned** session persists `/effort` and `/model` as saved user defaults. The interactive broker therefore always spawns the child with an explicit session-scoped `--effort` pin; a zero-inference end-to-end harness confirmed the pinned session acknowledges `(this session only)` and never touches saved defaults.
+- Manual `/effort` precedence and mid-session `/model` ambiguity are tracked from the verified terminal acknowledgements; a user-provided `--settings` document is merged additively, and any launch shape that cannot be combined safely visibly runs Claude unchanged.
 - A transport-free gateway mock proves exact-model preservation and an `output_config.effort`-only mutation before synthetic forwarding.
-- The deterministic classifier remains local, dependency-light, non-AI, non-RAG, and model-aware.
-- No live Claude proof, global install, PATH alias, settings mutation, credential access, commit, or push has occurred.
+- The deterministic classifier remains local, dependency-light, non-AI, non-RAG, and model-aware. A later calibrated replacement (a small local ordinal regression, see [calibration](docs/CALIBRATION.md)) would still make no network or LLM call.
+- A first user-authorized live single-prompt proof ran on 2026-08-21: the first submission was blocked, the trivial prompt classified below the confidence floor, the broker visibly failed open (no effort command), and exactly one model response occurred with saved defaults untouched. The acknowledged automatic-effort branch has live-CLI zero-inference proof but no billable live run yet.
+- No global install, PATH alias, credential access, commit, or push has occurred.
 
 An isolated, reversible test shell is now available for the first live user trial. It shadows `claude` only inside one newly opened PowerShell window; closing that window restores normal command resolution. It does not change the machine PATH, Claude settings files, credentials, provider, or model. See [Isolated user test](docs/ISOLATED_TEST.md).
 
@@ -28,7 +31,7 @@ The hybrid is not visually silent: stock Claude Code deliberately renders a `Use
 The intended broker must guarantee:
 
 - classification consumes zero model tokens and makes no network/model call;
-- an explicit user effort choice always wins;
+- an explicit user effort choice always wins by default (`manual-wins`); the opt-in `--autopilot autopilot-wins` launch policy instead re-evaluates every prompt automatically, with `/effort <level>`//`/effort auto` still visible and honored as the session's current level;
 - supported automatic effort is positively acknowledged before the task is forwarded;
 - the original task content is unchanged, held only in memory, and forwarded exactly once;
 - provider and exact model are never changed;

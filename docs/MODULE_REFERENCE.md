@@ -16,7 +16,13 @@
 | [`src/broker/hook-client.js`](../src/broker/hook-client.js) | Claude hook JSON adapter and visible no-change fail-open warning |
 | [`src/broker/pty-session.js`](../src/broker/pty-session.js) | ConPTY/PTY transport, effort acknowledgement normalization, exact replay |
 | [`src/broker/input-relay.js`](../src/broker/input-relay.js) | Byte-transparent stdin pause/resume during the routing window |
-| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: temporary hook settings, real CLI PTY, local IPC, routing, terminal relay, and cleanup |
+| [`src/broker/claude-args.js`](../src/broker/claude-args.js) | Positional scan of forwarded CLI arguments for `--settings`, `--effort`, resume, and print facts |
+| [`src/broker/settings-merge.js`](../src/broker/settings-merge.js) | Additive hook merge into a user-provided `--settings` document; refuses shapes it cannot combine |
+| [`src/broker/effort-baseline.js`](../src/broker/effort-baseline.js) | Local `effortLevel` read used only to pin a session-scoped `--effort`, so automatic changes never persist defaults |
+| [`src/broker/session-observer.js`](../src/broker/session-observer.js) | Terminal acknowledgement watcher for manual `/effort` precedence and `/model` ambiguity marking |
+| [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy and known-active-level tracking for the same-level skip |
+| [`src/broker/messages.js`](../src/broker/messages.js) | Prompt-language–localized status messages (English default, Spanish on clear evidence); cause codes stay untranslated |
+| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing, observer wiring, passthrough fallback, crash cleanup |
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |
 | [`scripts/verify-hybrid-broker-no-inference.mjs`](../scripts/verify-hybrid-broker-no-inference.mjs) | Installed-CLI diagnostic with an independent always-block safety hook |
@@ -54,6 +60,11 @@
 | [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens |
 | [`test/broker-ipc.test.js`](../test/broker-ipc.test.js) | Token-authenticated local IPC, fail-open, prompt-free hook status |
 | [`test/broker-input-relay.test.js`](../test/broker-input-relay.test.js) | Routing pause with exact permission/paste/Unicode/cancellation byte preservation |
+| [`test/broker-launch.test.js`](../test/broker-launch.test.js) | Launch-argument facts, additive `--settings` hook merge, and session effort baseline resolution |
+| [`test/pty-effort-dialog.test.js`](../test/pty-effort-dialog.test.js) | Escalation-confirmation dialog handling and modal dismissal before fail-open reinjection |
+| [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip |
+| [`test/messages.test.js`](../test/messages.test.js) | Language detection defaults and untranslated cause codes in both catalogs |
+| [`test/session-observer.test.js`](../test/session-observer.test.js) | Manual `/effort` and `/model` acknowledgement attribution, broker-window suppression, chunk splits |
 | [`test/gateway-transform.test.js`](../test/gateway-transform.test.js) | Effort-only body mutation, exact model, failure modes, stream bytes, privacy |
 | [`test/classifier.test.js`](../test/classifier.test.js) | Six tiers, boundaries, multilingual and model-aware regression |
 | [`test/documentation.test.js`](../test/documentation.test.js) | Link/index/product-boundary synchronization |

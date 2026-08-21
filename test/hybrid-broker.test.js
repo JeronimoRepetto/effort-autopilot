@@ -47,10 +47,11 @@ test("block, acknowledged effort, exact Unicode reinjection, and one-use allow",
   assert.equal(routed.outcome, "applied");
 
   const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  // The Spanish prompt selects the Spanish status catalog.
   assert.deepEqual(replay, {
     action: "allow",
     authorizedReplay: true,
-    systemMessage: "Effort Autopilot: applied medium for claude-sonnet-5.",
+    systemMessage: "Effort Autopilot: esfuerzo medium aplicado para claude-sonnet-5.",
   });
   const legitimateRepeat = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   assert.equal(legitimateRepeat.action, "block");
@@ -77,27 +78,85 @@ test("authorization is bound to session identity", async () => {
   );
 });
 
-test("ambiguous model and explicit user effort both reinject unchanged", async () => {
-  for (const scenario of ["ambiguous", "explicit"]) {
-    const coordinator = registeredCoordinator();
-    if (scenario === "ambiguous") coordinator.markModelAmbiguous(SESSION);
-    else coordinator.updateUserEffort(SESSION, "high");
-    const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
-    let effortCalls = 0;
-    const reinjected = [];
-    const result = await coordinator.routeTicket(first.ticketId, {
-      classifier: () => classification(),
-      applyEffort: async () => { effortCalls += 1; return { acknowledged: true, effort: "medium" }; },
-      reinjectPrompt: async (prompt) => reinjected.push(prompt),
-    });
-    assert.equal(effortCalls, 0);
-    assert.deepEqual(reinjected, [PROMPT]);
-    assert.equal(result.outcome, "unchanged");
-    assert.equal(
-      result.cause,
-      scenario === "ambiguous" ? "unsupported-or-ambiguous-model" : "explicit-user-effort",
-    );
-  }
+test("ambiguous model reinjects unchanged without an effort command", async () => {
+  const coordinator = registeredCoordinator();
+  coordinator.markModelAmbiguous(SESSION);
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  let effortCalls = 0;
+  const reinjected = [];
+  const result = await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification(),
+    applyEffort: async () => { effortCalls += 1; return { acknowledged: true, effort: "medium" }; },
+    reinjectPrompt: async (prompt) => reinjected.push(prompt),
+  });
+  assert.equal(effortCalls, 0);
+  assert.deepEqual(reinjected, [PROMPT]);
+  assert.equal(result.outcome, "unchanged");
+  assert.equal(result.cause, "unsupported-or-ambiguous-model");
+});
+
+test("explicit user effort allows the prompt directly without block or replay", () => {
+  const coordinator = registeredCoordinator();
+  coordinator.updateUserEffort(SESSION, "high");
+  const decision = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(decision.action, "allow");
+  assert.equal(decision.authorizedReplay, false);
+  assert.equal(decision.explicitUserEffort, true);
+  assert.match(decision.systemMessage, /elección manual de esfuerzo \(explicit-user-effort\)/);
+  assert.equal(coordinator.pending.size, 0);
+  assert.equal(coordinator.authorizations.size, 0);
+});
+
+test("user effort set after a block still wins during routing, and auto re-enables automation", async () => {
+  const coordinator = registeredCoordinator();
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(first.action, "block");
+  coordinator.updateUserEffort(SESSION, "high");
+  let effortCalls = 0;
+  const result = await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification(),
+    applyEffort: async () => { effortCalls += 1; return { acknowledged: true, effort: "medium" }; },
+    reinjectPrompt: async () => {},
+  });
+  assert.equal(effortCalls, 0);
+  assert.equal(result.cause, "explicit-user-effort");
+  // Consume the replay authorization armed by the unchanged forward.
+  assert.equal(coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT }).authorizedReplay, true);
+
+  assert.equal(coordinator.clearUserEffort(SESSION), true);
+  const afterClear = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(afterClear.action, "block");
+  assert.ok(afterClear.ticketId);
+  coordinator.cancelTicket(afterClear.ticketId);
+});
+
+test("a dialog-confirmed application discloses the saved-default side effect", async () => {
+  const coordinator = registeredCoordinator();
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification(),
+    config: { ceiling: "medium", baselineEffort: "medium" },
+    applyEffort: async (effort) => ({ acknowledged: true, effort, viaDialog: true }),
+    reinjectPrompt: async () => {},
+  });
+  const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.match(replay.systemMessage, /esfuerzo medium aplicado para claude-sonnet-5\. La confirmación del CLI también guardó este nivel como tu valor por defecto\./);
+});
+
+test("an unsupported session model is named in the prompt-free unchanged status", async () => {
+  const coordinator = new HybridBrokerCoordinator();
+  coordinator.registerSession({ sessionId: SESSION, model: "claude-futuro-9[1m]" });
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  const result = await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification(),
+    applyEffort: async (effort) => ({ acknowledged: true, effort }),
+    reinjectPrompt: async () => {},
+  });
+  assert.equal(result.cause, "unsupported-or-ambiguous-model");
+  const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(replay.action, "allow");
+  assert.match(replay.systemMessage, /unsupported-or-ambiguous-model: claude-futuro-9\[1m\]/);
+  assert.doesNotMatch(replay.systemMessage, /Añade/);
 });
 
 test("unacknowledged effort still arms exactly one unchanged replay", async () => {
@@ -113,7 +172,7 @@ test("unacknowledged effort still arms exactly one unchanged replay", async () =
   assert.equal(reinjections, 1);
   const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   assert.equal(replay.action, "allow");
-  assert.match(replay.systemMessage, /automatic effort unchanged \(effort-not-acknowledged\)/);
+  assert.match(replay.systemMessage, /esfuerzo automático sin cambios \(effort-not-acknowledged\)/);
   assert.equal(coordinator.authorizations.size, 0);
 });
 
