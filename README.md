@@ -73,7 +73,11 @@ The old one-shot launcher has been rejected as a product and removed from the pa
 
 ## Support
 
-If this tool saves you time or tokens, a donation is welcome — the funding link will appear here and in the repository's Sponsor button once enabled.
+If this tool saves you time or tokens, you can support its development — it genuinely helps keep the open-source work going:
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jeronimorepetto)
+
+**[☕ ko-fi.com/jeronimorepetto](https://ko-fi.com/jeronimorepetto)**
 
 ## License
 

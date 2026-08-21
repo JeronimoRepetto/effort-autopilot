@@ -53,6 +53,10 @@
     "validate": "claude plugin validate ."
   },
   "license": "MIT",
+  "funding": {
+    "type": "ko-fi",
+    "url": "https://ko-fi.com/jeronimorepetto"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JeronimoRepetto/effort-autopilot.git"
