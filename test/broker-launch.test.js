@@ -25,7 +25,8 @@ test("launch args expose settings position, explicit effort, resume, and print f
   const empty = parseClaudeLaunchArgs([]);
   assert.equal(empty.settings, null);
   assert.equal(empty.effort, null);
-  assert.equal(empty.autopilotPolicy, "manual-wins");
+  // null = no launch-flag opinion; the config chain resolves the policy.
+  assert.equal(empty.autopilotPolicy, null);
 });
 
 test("broker-owned --autopilot flag is consumed and never forwarded to the CLI", () => {
@@ -39,7 +40,7 @@ test("broker-owned --autopilot flag is consumed and never forwarded to the CLI",
   assert.deepEqual([...inline.forwardArgs], []);
 
   const invalid = parseClaudeLaunchArgs(["--autopilot", "turbo"]);
-  assert.equal(invalid.autopilotPolicy, "manual-wins");
+  assert.equal(invalid.autopilotPolicy, null);
   assert.equal(invalid.invalidAutopilotPolicy, "turbo");
   assert.deepEqual([...invalid.forwardArgs], []);
 

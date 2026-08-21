@@ -4,7 +4,7 @@
 
 Effort Autopilot's only intended end-user product is a transparent, user-approved, globally installed broker/shim in front of the real Claude Code CLI. It must preserve the stock interactive session and intercept only positively identified top-level task submissions before model inference.
 
-The old one-shot launcher is not an alternative, fallback, or public command. Its `--print` transport is retained only because the internal benchmark runner depends on it. The npm package is private and exposes no binaries while the broker is unproven.
+The old one-shot launcher is not an alternative, fallback, or public command. Its `--print` transport is retained only because the internal benchmark runner depends on it. The npm package remains private and unpublished; a reversible installer ([Installation](INSTALL.md)) provides the global shim from a repository checkout while distribution is prepared.
 
 ## Terms
 
@@ -50,6 +50,6 @@ Status must distinguish `applied` from `unchanged` and state a prompt-free cause
 
 The local classifier, model profiles, fail-open controller, authenticated local IPC, one-use replay authorization, synthetic gateway transform, and ConPTY transport are implemented and tested. An installed CLI diagnostic completed the full hook/block/acknowledge/replay/second-hook sequence with an independent final blocker and zero inference.
 
-`UserPromptSubmit` supplies the missing semantic event, so permissions, auth flows, editors, pickers, and ordinary slash commands do not need byte-level interpretation. Production is still gated on a reversible installer/shim, robust mid-session model and explicit-effort tracking, input relay integration, and one authorized live prompt proof. Stock Claude visibly reports the first hook block; there is no supported quiet-block output.
+`UserPromptSubmit` supplies the missing semantic event, so permissions, auth flows, editors, pickers, and ordinary slash commands do not need byte-level interpretation. The former production gates are met: mid-session model ambiguity marking and explicit-effort tracking are implemented, the input relay is integrated, user-authorized live prompt proofs covered the applied, fail-open, and manual-precedence branches, and a reversible installer/shim exists ([Installation](INSTALL.md)). Stock Claude visibly reports the first hook block; there is no supported quiet-block output.
 
-No end-user install, live model proof, or savings claim is authorized yet.
+Still not authorized: npm publication and any savings claim (effort is a behavioral signal, not a token cap; measured results await calibration).

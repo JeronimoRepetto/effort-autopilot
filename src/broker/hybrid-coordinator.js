@@ -9,10 +9,10 @@ const MAX_PROMPT_BYTES = 1024 * 1024;
 
 function replaySystemMessage(messages, metadata, rawModel = null) {
   if (metadata?.outcome === "applied") {
-    // A dialog-confirmed change persists the CLI's saved default effort — an
+    // Every non-max application persists the CLI's saved default effort — an
     // upstream side effect the broker cannot scope, so it is disclosed.
-    const dialogNote = metadata.viaConfirmationDialog ? messages.appliedDialogNote : "";
-    return `${messages.applied(metadata.appliedEffort, metadata.model)}${dialogNote}`;
+    const persistNote = metadata.savedDefaultSideEffect ? messages.appliedPersistNote : "";
+    return `${messages.applied(metadata.appliedEffort, metadata.model)}${persistNote}`;
   }
   const cause = metadata?.cause ?? "unknown";
   // Naming the unsupported model id (never prompt content) lets the user see

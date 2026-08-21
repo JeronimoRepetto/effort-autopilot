@@ -121,9 +121,15 @@ export class PtySession {
         return { acknowledged: false, effort: null };
       }
     }
-    // viaDialog is disclosed upstream: a dialog-confirmed change persists the
-    // CLI's saved default (verified 2.1.238), unlike the direct command path.
-    return { acknowledged: true, effort, viaDialog };
+    // File-verified on 2.1.238: every /effort level EXCEPT max persists the
+    // CLI's saved default, on every path (pinned or not, dialog or direct).
+    // Only /effort max acknowledges "(this session only)".
+    return {
+      acknowledged: true,
+      effort,
+      viaDialog,
+      persistsSavedDefault: effort !== "max",
+    };
   }
 
   async forwardPrompt(prompt) {

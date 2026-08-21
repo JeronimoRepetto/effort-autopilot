@@ -39,7 +39,8 @@ test("block, acknowledged effort, exact Unicode reinjection, and one-use allow",
     config: { ceiling: "medium", baselineEffort: "medium" },
     applyEffort: async (effort) => {
       events.push(`ack:${effort}`);
-      return { acknowledged: true, effort };
+      // Mirrors the real transport: non-max levels persist the saved default.
+      return { acknowledged: true, effort, persistsSavedDefault: effort !== "max" };
     },
     reinjectPrompt: async (prompt) => events.push(`reinject:${prompt}`),
   });
@@ -47,11 +48,14 @@ test("block, acknowledged effort, exact Unicode reinjection, and one-use allow",
   assert.equal(routed.outcome, "applied");
 
   const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
-  // The Spanish prompt selects the Spanish status catalog.
+  // The Spanish prompt selects the Spanish status catalog; non-max levels
+  // disclose the CLI's saved-default side effect.
   assert.deepEqual(replay, {
     action: "allow",
     authorizedReplay: true,
-    systemMessage: "Effort Autopilot: esfuerzo medium aplicado para claude-sonnet-5.",
+    systemMessage:
+      "Effort Autopilot: esfuerzo medium aplicado para claude-sonnet-5." +
+      " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
   });
   const legitimateRepeat = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   assert.equal(legitimateRepeat.action, "block");
@@ -130,7 +134,7 @@ test("user effort set after a block still wins during routing, and auto re-enabl
   coordinator.cancelTicket(afterClear.ticketId);
 });
 
-test("a dialog-confirmed application discloses the saved-default side effect", async () => {
+test("a persisting application discloses the saved-default side effect", async () => {
   const coordinator = registeredCoordinator();
   const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
   await coordinator.routeTicket(first.ticketId, {
@@ -140,7 +144,7 @@ test("a dialog-confirmed application discloses the saved-default side effect", a
     reinjectPrompt: async () => {},
   });
   const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
-  assert.match(replay.systemMessage, /esfuerzo medium aplicado para claude-sonnet-5\. La confirmación del CLI también guardó este nivel como tu valor por defecto\./);
+  assert.match(replay.systemMessage, /esfuerzo medium aplicado para claude-sonnet-5\. El CLI también guardó este nivel como tu valor por defecto/);
 });
 
 test("an unsupported session model is named in the prompt-free unchanged status", async () => {

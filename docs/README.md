@@ -7,6 +7,7 @@ This directory is the detailed reference for Effort Autopilot. The root [README]
 | Document | Responsibility |
 | --- | --- |
 | [Product contract](PRODUCT.md) | Purpose, terminology, guarantees, non-guarantees, and current scope |
+| [Installation](INSTALL.md) | Reversible global shim install, uninstall, status, precedence policy, and per-project control |
 | [Stock CLI feasibility](STOCK_HOST_FEASIBILITY.md) | Hybrid hook/ConPTY proof, gateway evidence, installed zero-inference result, and release gaps |
 | [Isolated user test](ISOLATED_TEST.md) | Reversible first live trial using the normal `claude` command in a temporary PowerShell session |
 | [Draft upstream proposal](UPSTREAM_CAPABILITY_PROPOSAL.md) | Local, unsubmitted same-turn hook proposal and engineering appendix |

@@ -26,7 +26,7 @@ const CATALOG = Object.freeze({
     explicitUserEffort:
       "Effort Autopilot: keeping your manual effort choice (explicit-user-effort).",
     applied: (effort, model) => `Effort Autopilot: applied ${effort} for ${model}.`,
-    appliedDialogNote: " The CLI's confirmation also saved this level as your default.",
+    appliedPersistNote: " The CLI also saved this level as your default (upstream behavior).",
     unchanged: (cause) => `Effort Autopilot: automatic effort unchanged (${cause}).`,
     brokerUnavailable: "Effort Autopilot: automatic effort unchanged (broker unavailable).",
   }),
@@ -37,7 +37,7 @@ const CATALOG = Object.freeze({
     explicitUserEffort:
       "Effort Autopilot: se mantiene tu elección manual de esfuerzo (explicit-user-effort).",
     applied: (effort, model) => `Effort Autopilot: esfuerzo ${effort} aplicado para ${model}.`,
-    appliedDialogNote: " La confirmación del CLI también guardó este nivel como tu valor por defecto.",
+    appliedPersistNote: " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
     unchanged: (cause) => `Effort Autopilot: esfuerzo automático sin cambios (${cause}).`,
     brokerUnavailable: "Effort Autopilot: esfuerzo automático sin cambios (broker unavailable).",
   }),

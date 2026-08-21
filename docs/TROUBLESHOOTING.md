@@ -36,7 +36,7 @@ It opens stock Claude Code but installs an independent temporary block hook, so 
 
 ## Why the broker is not globally installed
 
-The hybrid uses `UserPromptSubmit` instead of guessing semantic state from terminal bytes, and its guarded installed proof passes. Global installation is still held for a reversible shim/hook installer, exact tracking after mid-session `/model` changes, explicit user-effort observation, crash cleanup, and one authorized live prompt proof. Do not create a PATH alias manually.
+The hybrid uses `UserPromptSubmit` instead of guessing semantic state from terminal bytes, and its guarded installed proof passes. The former release blockers (mid-session `/model` ambiguity marking, explicit user-effort observation, crash cleanup, live prompt proofs) are implemented and live-validated, and a reversible installer now exists — see [Installation](INSTALL.md). Do not create a PATH alias manually; use `effort-autopilot install`/`uninstall` so the change stays reversible and backed up.
 
 ## Claude shows “operation blocked by hook”
 

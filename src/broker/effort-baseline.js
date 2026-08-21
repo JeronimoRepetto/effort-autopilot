@@ -4,18 +4,17 @@ import path from "node:path";
 import process from "node:process";
 
 /**
- * Claude Code 2.1.238 persists `/effort <level>` as the user's default for new
- * sessions unless the session was started with an explicit `--effort` flag, in
- * which case the change is session-only. The broker therefore pins the session
- * effort scope at spawn so its automatic `/effort` commands can never mutate
- * the user's saved defaults.
+ * Resolves the effort level the new session will start at, reading only the
+ * `effortLevel` key from the same local settings files Claude itself consults
+ * (project-local, project, user), falling back to `auto` (unset behavior).
  *
- * The pinned value must reproduce the effort the session would have had
- * anyway. This resolver reads only the `effortLevel` key from the same local
- * settings files Claude itself consults (project-local, project, user) and
- * falls back to `auto`, which matches unset behavior. Managed/enterprise
- * policy files are not read; if one overrides effort, the CLI acknowledgement
- * gate still prevents any unsupported application.
+ * The value is passed as an `--effort` spawn pin. File-verified on 2.1.238:
+ * the pin does NOT scope later `/effort` commands (every level except `max`
+ * persists the saved default regardless); it is kept because it makes the
+ * session's starting level known, enabling the same-level no-op skip, and it
+ * reproduces the effort the session would have had anyway. Managed/enterprise
+ * policy files are not read; the CLI acknowledgement gate still prevents any
+ * unsupported application.
  */
 
 const EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max", "auto"]);

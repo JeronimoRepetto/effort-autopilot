@@ -53,14 +53,14 @@ On Windows the script uses bracketed paste plus a bounded 500 ms settle window. 
 
 ## Reversible interactive test
 
-After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` may open a separate PowerShell whose session-local PATH maps `claude` to the internal interactive broker. Closing that window restores the ordinary command. See [Isolated user test](ISOLATED_TEST.md). This is the only currently approved live-test surface; it does not authorize a global installation.
+After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` may open a separate PowerShell whose session-local PATH maps `claude` to the internal interactive broker. Closing that window restores the ordinary command. See [Isolated user test](ISOLATED_TEST.md). For a persistent setup, the reversible installer is documented in [Installation](INSTALL.md); the npm package itself remains private and unpublished.
 
 ## Change workflow
 
 1. Keep host-neutral logic under `src/core`.
 2. Keep product broker logic under `src/broker`, the guarded proof under `scripts`, and gateway research under `src/gateway`.
 3. Keep `src/launcher`, `src/adapters/claude-cli`, legacy `src/cli`, and pilot bins internal-only.
-4. Never add a public bin, persistent PATH shim, settings mutation, gateway listener, or unreviewed live proof. The isolated session shim must remain explicit and reversible.
+4. The only permitted persistent install surface is the reversible installer (`bin/effort-autopilot-cli.js` + `src/installer/`): explicit consent, exact backups, surgical uninstall, never overwriting or renaming the real `claude`. Never add a Claude settings mutation, gateway listener, or unreviewed live proof.
 5. Preserve prompt-free metadata and add failure/privacy/exact-once tests.
 6. Update the feasibility audit and module map, run tests, and inspect git status.
 

@@ -22,6 +22,13 @@
 | [`src/broker/session-observer.js`](../src/broker/session-observer.js) | Terminal acknowledgement watcher for manual `/effort` precedence and `/model` ambiguity marking |
 | [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy and known-active-level tracking for the same-level skip |
 | [`src/broker/messages.js`](../src/broker/messages.js) | Prompt-language–localized status messages (English default, Spanish on clear evidence); cause codes stay untranslated |
+| [`src/broker/install-paths.js`](../src/broker/install-paths.js) | Canonical per-platform install root, shim, config, and backup locations |
+| [`src/broker/project-config.js`](../src/broker/project-config.js) | Per-project `.effort-autopilot.json`, global install config, and the policy resolution chain |
+| [`src/broker/claude-locator.js`](../src/broker/claude-locator.js) | Real-Claude resolution that skips the shim directory on every launch |
+| [`src/installer/path-edit.js`](../src/installer/path-edit.js) | Pure, reversible PATH-entry and shell-profile-block transformations |
+| [`src/installer/shim.js`](../src/installer/shim.js) | Windows `.cmd` and POSIX shell shim contents |
+| [`src/installer/installer.js`](../src/installer/installer.js) | Consent-gated install/uninstall/status/policy with raw-registry PATH handling and backups |
+| [`bin/effort-autopilot-cli.js`](../bin/effort-autopilot-cli.js) | Public installer CLI entrypoint (install, uninstall, status, policy) |
 | [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing, observer wiring, passthrough fallback, crash cleanup |
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |
@@ -64,6 +71,7 @@
 | [`test/pty-effort-dialog.test.js`](../test/pty-effort-dialog.test.js) | Escalation-confirmation dialog handling and modal dismissal before fail-open reinjection |
 | [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip |
 | [`test/messages.test.js`](../test/messages.test.js) | Language detection defaults and untranslated cause codes in both catalogs |
+| [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain |
 | [`test/session-observer.test.js`](../test/session-observer.test.js) | Manual `/effort` and `/model` acknowledgement attribution, broker-window suppression, chunk splits |
 | [`test/gateway-transform.test.js`](../test/gateway-transform.test.js) | Effort-only body mutation, exact model, failure modes, stream bytes, privacy |
 | [`test/classifier.test.js`](../test/classifier.test.js) | Six tiers, boundaries, multilingual and model-aware regression |

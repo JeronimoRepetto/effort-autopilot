@@ -18,7 +18,9 @@ export function parseClaudeLaunchArgs(args = []) {
   let effort = null;
   let resumesSession = false;
   let printMode = false;
-  let autopilotPolicy = "manual-wins";
+  // null = no launch-flag opinion; the broker resolves the effective policy
+  // through the project/global config chain.
+  let autopilotPolicy = null;
   let invalidAutopilotPolicy = null;
   const forwardArgs = [];
 

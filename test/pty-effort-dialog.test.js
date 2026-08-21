@@ -32,7 +32,8 @@ test("immediate acknowledgement resolves without touching the dialog path", asyn
   const session = new PtySession(child, { acknowledgementTimeoutMs: 300 });
   assert.deepEqual(
     await session.applyEffort("max"),
-    { acknowledged: true, effort: "max", viaDialog: false },
+    // max is the only session-scoped level on 2.1.238 (file-verified).
+    { acknowledged: true, effort: "max", viaDialog: false, persistsSavedDefault: false },
   );
   assert.deepEqual(child.writes, ["/effort max\r"]);
 });
@@ -49,7 +50,7 @@ test("mid-conversation confirmation dialog is confirmed by the broker itself", a
   // viaDialog surfaces upstream so the saved-default side effect is disclosed.
   assert.deepEqual(
     await session.applyEffort("xhigh"),
-    { acknowledged: true, effort: "xhigh", viaDialog: true },
+    { acknowledged: true, effort: "xhigh", viaDialog: true, persistsSavedDefault: true },
   );
   assert.deepEqual(child.writes, ["/effort xhigh\r", "\r"]);
 });

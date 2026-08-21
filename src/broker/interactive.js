@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -7,7 +6,9 @@ import process from "node:process";
 
 import { classifyEnvelope } from "../core/protocol.js";
 import { parseClaudeLaunchArgs } from "./claude-args.js";
+import { findRealClaudeExecutable } from "./claude-locator.js";
 import { resolveSessionEffortBaseline } from "./effort-baseline.js";
+import { readGlobalConfig, readProjectConfig, resolveAutopilotPolicy } from "./project-config.js";
 import { HybridBrokerCoordinator } from "./hybrid-coordinator.js";
 import { createIpcIdentity, startBrokerIpcServer } from "./ipc.js";
 import { PtyInputRelay } from "./input-relay.js";
@@ -18,19 +19,6 @@ import { mergeHookSettings } from "./settings-merge.js";
 
 function quoteCommandPart(value) {
   return `"${String(value).replaceAll('"', '\\"')}"`;
-}
-
-function findClaudeExecutable() {
-  if (process.env.EFFORT_AUTOPILOT_REAL_CLAUDE) {
-    return process.env.EFFORT_AUTOPILOT_REAL_CLAUDE;
-  }
-  if (process.platform !== "win32") return "claude";
-  const matches = execFileSync("where.exe", ["claude"], { encoding: "utf8" })
-    .trim()
-    .split(/\r?\n/u)
-    .filter(Boolean);
-  if (matches.length === 0) throw new Error("Claude Code CLI was not found");
-  return matches[0];
 }
 
 function terminalDimensions() {
@@ -53,7 +41,7 @@ export async function runInteractiveBroker({
   claudeArgs = process.argv.slice(2),
   cwd = process.cwd(),
   home = os.homedir(),
-  claudeExecutable = findClaudeExecutable(),
+  claudeExecutable = findRealClaudeExecutable(),
   input = process.stdin,
   output = process.stdout,
   errorOutput = process.stderr,
@@ -61,15 +49,23 @@ export async function runInteractiveBroker({
   if (!input.isTTY || !output.isTTY) {
     throw new Error("the interactive broker requires a terminal");
   }
+  // A persistent shim that ever resolved back to itself must fail loudly
+  // instead of fork-bombing the machine.
+  if (process.env.EFFORT_AUTOPILOT_BROKER_ACTIVE === "1") {
+    throw new Error("broker recursion detected: the claude shim resolved back to itself");
+  }
 
   const launch = parseClaudeLaunchArgs(claudeArgs);
+  const projectConfig = readProjectConfig({ cwd });
 
   // Any launch shape without a proven session-only effort scope, or whose
   // user configuration cannot be combined without guessing, runs Claude
   // completely unchanged instead of degrading its behavior.
   let passthroughCause = null;
   let userSettings = {};
-  if (launch.printMode) {
+  if (projectConfig.enabled === false) {
+    passthroughCause = "disabled by the project's .effort-autopilot.json";
+  } else if (launch.printMode) {
     passthroughCause = "non-interactive print mode";
   } else if (launch.resumesSession) {
     passthroughCause = "resumed sessions have no verified session-only effort scope yet";
@@ -79,6 +75,11 @@ export async function runInteractiveBroker({
     } catch {
       passthroughCause = "the provided --settings value could not be safely combined";
     }
+  }
+  if (projectConfig.invalid) {
+    errorOutput.write(
+      "Effort Autopilot: the project's .effort-autopilot.json is invalid and was ignored.\r\n",
+    );
   }
 
   const root = path.resolve(import.meta.dirname, "..", "..");
@@ -100,15 +101,20 @@ export async function runInteractiveBroker({
     return relayPlainSession({ claudeExecutable, claudeArgs: launch.forwardArgs, cwd, input, output });
   }
 
-  const autopilotWins = launch.autopilotPolicy === "autopilot-wins";
+  const resolvedPolicy = resolveAutopilotPolicy({
+    launchPolicy: launch.autopilotPolicy,
+    projectPolicy: projectConfig.policy,
+    globalPolicy: readGlobalConfig({ home }).policy,
+  });
+  const autopilotWins = resolvedPolicy.policy === "autopilot-wins";
   if (launch.invalidAutopilotPolicy) {
     errorOutput.write(
-      `Effort Autopilot: unknown --autopilot policy ${launch.invalidAutopilotPolicy}; using manual-wins.\r\n`,
+      `Effort Autopilot: unknown --autopilot policy ${launch.invalidAutopilotPolicy}; using ${resolvedPolicy.policy}.\r\n`,
     );
   }
   if (autopilotWins) {
     errorOutput.write(
-      "Effort Autopilot: autopilot-wins policy active; manual /effort choices are re-evaluated on every prompt.\r\n",
+      `Effort Autopilot: autopilot-wins policy active (${resolvedPolicy.source}); manual /effort choices are re-evaluated on every prompt.\r\n`,
     );
   }
 
@@ -217,6 +223,7 @@ export async function runInteractiveBroker({
       cwd,
       env: {
         ...process.env,
+        EFFORT_AUTOPILOT_BROKER_ACTIVE: "1",
         EFFORT_AUTOPILOT_IPC_ENDPOINT: identity.endpoint,
         EFFORT_AUTOPILOT_IPC_TOKEN: identity.token,
       },
@@ -265,7 +272,7 @@ async function relayPlainSession({ claudeExecutable, claudeArgs, cwd, input, out
     const dimensions = terminalDimensions();
     session = PtySession.spawn(claudeExecutable, claudeArgs, {
       cwd,
-      env: process.env,
+      env: { ...process.env, EFFORT_AUTOPILOT_BROKER_ACTIVE: "1" },
       cols: dimensions.cols,
       rows: dimensions.rows,
     });

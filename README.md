@@ -2,7 +2,7 @@
 
 Effort Autopilot is being built as a transparent, globally installed broker in front of the real Claude Code CLI. The intended experience is still the normal interactive `claude` session: a top-level task is classified locally, the chosen effort is applied before inference, and the original task is forwarded once without changing provider, model, or session context.
 
-> **Not installable as an end-user product yet.** The old one-shot launcher has been rejected and removed from npm/package UX. No `effort-autopilot` executable is currently published by this package, no shim replaces `claude`, and no user setting is changed. The existing `--print` transport survives only as internal benchmark/calibration infrastructure.
+> **Not published to npm yet.** A reversible installer now exists for use from a repository checkout — see [Installation](docs/INSTALL.md): it shims `claude` on your user PATH with explicit consent, exact backups, and a surgical `uninstall`; your real Claude executable and settings are never modified. The old one-shot launcher has been rejected and removed from npm/package UX; its `--print` transport survives only as internal benchmark/calibration infrastructure.
 
 See the evidence-backed [CLI feasibility audit](docs/STOCK_HOST_FEASIBILITY.md). It now records a third, stronger CLI result:
 
@@ -15,7 +15,7 @@ See the evidence-backed [CLI feasibility audit](docs/STOCK_HOST_FEASIBILITY.md).
 - Claude Code 2.1.238 `/effort max` was verified without submitting a model prompt; the CLI acknowledged `Set effort level to max (this session only)`.
 - A Windows ConPTY mock proves classifier → effort command → exact acknowledgement → unchanged prompt forwarded once → one synthetic request.
 - An installed-CLI zero-inference diagnostic proved SessionStart model `claude-fable-5`, first-hook block, acknowledged `max`, one-time exact replay, consumed authorization, and a final independent safety block. No model turn occurred.
-- A guarded probe proved that on 2.1.238 an **unpinned** session persists `/effort` and `/model` as saved user defaults. The interactive broker therefore always spawns the child with an explicit session-scoped `--effort` pin; a zero-inference end-to-end harness confirmed the pinned session acknowledges `(this session only)` and never touches saved defaults.
+- File-verified on 2.1.238: `/effort low|medium|high|xhigh` **always persists the user's saved default** (every path, pinned or not); only `/effort max` is session-scoped, and `/model` persists too. The broker visibly discloses the saved-default side effect on every non-max application; a native session-scoped control is requested upstream.
 - Manual `/effort` precedence and mid-session `/model` ambiguity are tracked from the verified terminal acknowledgements; a user-provided `--settings` document is merged additively, and any launch shape that cannot be combined safely visibly runs Claude unchanged.
 - A transport-free gateway mock proves exact-model preservation and an `output_config.effort`-only mutation before synthetic forwarding.
 - The deterministic classifier remains local, dependency-light, non-AI, non-RAG, and model-aware. A later calibrated replacement (a small local ordinal regression, see [calibration](docs/CALIBRATION.md)) would still make no network or LLM call.

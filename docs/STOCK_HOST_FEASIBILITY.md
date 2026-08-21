@@ -83,15 +83,16 @@ The status displayed `max`, then the session exited without a task. No model pro
 
 ### Verified effort/model persistence and session scoping (2026-08-21)
 
-Guarded zero-inference probes on the same 2.1.238 build, including a scope matrix that read the saved `effortLevel` file after every command, converged on this model of which paths persist the saved default:
+Guarded zero-inference probes on the same 2.1.238 build, culminating in an **atomic-path matrix that read the saved `effortLevel` file after every single command**, established the definitive persistence rule:
 
-- **Programmatic single-write submission** (the broker's path: `/effort <level>` plus carriage return in one write) is session-scoped: it acknowledged `(this session only)` whenever the level differed from the saved default. When the level equals the saved default it prints the `saved as your default` wording with no observable change.
-- **Interactive paths persist**: typing the command through the live composer/menu changed the saved file on every probe step; the bare `/effort` picker persists; and the mid-conversation escalation confirmation dialog persists (observed live: confirming `xhigh` rewrote the user's saved default).
+- **`/effort low|medium|high|xhigh` ALWAYS persists the saved default** — on every path (the broker's atomic single-write submission, interactive typing through the composer, the bare picker, and the escalation confirmation dialog) and regardless of any `--effort` spawn flag. The acknowledgement says `saved as your default for new sessions` and the file changes.
+- **`/effort max` is the only session-scoped level**: it acknowledges `(this session only)` and the file is untouched (file-verified in the same pinned session where `medium` and `xhigh` both persisted).
+- Earlier drafts of this section wrongly credited the `--effort` spawn pin with session scoping; the two "(this session only)" observations that suggested it were both `max` applications. The pin protects nothing — it is kept only because it makes the session's starting level known (enabling the same-level skip) and is harmless.
 - `/model sonnet` acknowledged `Set model to Sonnet 5 and saved as your default for new sessions` and persisted `model`.
 - `/effort auto` acknowledges `Effort level set to auto` (different wording), and `--effort auto` is accepted as a spawn flag.
 - The composer renders a `● <level> · /effort` status line; under `auto` it displays the resolved level, not the word `auto`.
 
-The interactive broker still spawns the child with an explicit `--effort` scope pin (the user's own flag when given, otherwise the local `effortLevel` from project-local/project/user settings, otherwise `auto`): every session-scoped observation so far was made with a pin present, the pin reproduces the effort the session would have had anyway, and it keeps the session's starting level known for the same-level skip. Settings files are read tolerating a UTF-8 BOM, which Windows tooling commonly writes.
+Consequence: every non-max automatic application rewrites the user's saved default as an upstream side effect the broker cannot scope. The broker discloses it in the visible status (`The CLI also saved this level as your default`); an effortLevel snapshot/restore mitigation and the native session-scoped control in the upstream proposal are the candidate real fixes. Settings files are read tolerating a UTF-8 BOM, which Windows tooling commonly writes.
 
 One persistence path remains outside the pin: in a live pinned broker session on 2026-08-21, the bare `/effort` **picker** (no argument) acknowledged `saved as your default for new sessions` and persisted the chosen level into the user's settings. The broker cannot intercept or scope that interactive UI; it only observes the acknowledgement and registers the explicit user choice. This is a documented honest limitation of the stock CLI, not broker behavior.
 

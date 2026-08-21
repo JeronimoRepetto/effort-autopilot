@@ -34,7 +34,7 @@ By default (`manual-wins`), typing `/effort <level>` yourself latches your choic
 claude --autopilot autopilot-wins
 ```
 
-Stock-CLI caveats you may notice: typing `/effort` yourself (with or without an argument, through the composer or its picker) saves the chosen level as your global default; and when the broker escalates mid-conversation, the CLI's confirmation dialog also saves the new level as your default — the broker reports this visibly (`The CLI's confirmation also saved this level as your default.`). Only the broker's own direct command path is session-scoped. A native session-only effort control is requested in the upstream proposal.
+Stock-CLI caveat (file-verified): **every `/effort` change except `max` saves the chosen level as your global default** — whether you type it, pick it, confirm the broker's escalation dialog, or the broker applies it automatically. The broker reports it visibly on each application (`The CLI also saved this level as your default`). Only `/effort max` is session-scoped. A native session-only effort control is requested in the upstream proposal.
 
 ## Expected safety behavior
 
