@@ -23,7 +23,7 @@
 | [`src/broker/input-relay.js`](../src/broker/input-relay.js) | Byte-transparent stdin pause/resume during the routing window |
 | [`src/broker/claude-args.js`](../src/broker/claude-args.js) | Positional scan of forwarded CLI arguments for `--settings`, `--effort`, resume, and print facts |
 | [`src/broker/settings-merge.js`](../src/broker/settings-merge.js) | Additive hook merge into a user-provided `--settings` document; refuses shapes it cannot combine |
-| [`src/broker/effort-baseline.js`](../src/broker/effort-baseline.js) | Local `effortLevel` read used only to pin a session-scoped `--effort`, so automatic changes never persist defaults |
+| [`src/broker/effort-baseline.js`](../src/broker/effort-baseline.js) | Local `effortLevel` read for the `--effort` spawn pin — makes the starting level known for the same-level skip (the pin does not scope persistence) |
 | [`src/broker/session-observer.js`](../src/broker/session-observer.js) | Terminal acknowledgement watcher for manual `/effort` precedence and `/model` ambiguity marking |
 | [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy and known-active-level tracking for the same-level skip |
 | [`src/broker/messages.js`](../src/broker/messages.js) | Prompt-language–localized status messages (English default, Spanish on clear evidence); cause codes stay untranslated |
@@ -33,7 +33,7 @@
 | [`src/installer/path-edit.js`](../src/installer/path-edit.js) | Pure, reversible PATH-entry and shell-profile-block transformations |
 | [`src/installer/shim.js`](../src/installer/shim.js) | Windows `.cmd` and POSIX shell shim contents |
 | [`src/installer/installer.js`](../src/installer/installer.js) | Consent-gated install/uninstall/status/policy with raw-registry PATH handling and backups |
-| [`bin/effort-autopilot-cli.js`](../bin/effort-autopilot-cli.js) | Public installer CLI entrypoint (install, uninstall, status, policy) |
+| [`bin/effort-autopilot-cli.js`](../bin/effort-autopilot-cli.js) | Public installer CLI entrypoint (install, uninstall, status, policy, ml-setup) |
 | [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing, observer wiring, passthrough fallback, crash cleanup |
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |

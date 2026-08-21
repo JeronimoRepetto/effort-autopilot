@@ -21,4 +21,4 @@ claude plugin validate .\skills
 
 Validation checks historical file formats, not broker behavior.
 
-Do not install this scaffold for normal use. If it was installed during earlier development, remove it with the official `claude plugin uninstall` command and remove its local marketplace registration. This does not affect the future broker because no broker is globally installed yet.
+Do not install this scaffold for normal use. If it was installed during earlier development, remove it with the official `claude plugin uninstall` command and remove its local marketplace registration. This is independent of the broker: the shipped product installs via the reversible shim installer ([INSTALL.md](INSTALL.md)), not as a plugin.

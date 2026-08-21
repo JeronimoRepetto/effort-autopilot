@@ -2,7 +2,7 @@
 
 **Automatic reasoning-effort selection for the Claude Code CLI.** You keep using `claude` exactly as always; before each task reaches the model, Effort Autopilot classifies it **locally** (zero tokens, zero network) and sets the right `/effort` level — low for trivial asks, xhigh for deep work — without ever changing your model, provider, login, or session.
 
-> Status: **working end to end on Windows, live-validated, not yet published to npm.** Install today from a repository checkout with the reversible installer — see [Installation](docs/INSTALL.md).
+> Status: **beta** ([`v0.3.0-beta.1`](https://github.com/JeronimoRepetto/effort-autopilot/releases)) — working end to end on Windows, live-validated, not yet published to npm. Install today from a repository checkout with the reversible installer — see [Installation](docs/INSTALL.md).
 
 ## How it works today
 
@@ -31,7 +31,7 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 ### What works right now
 
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
-- Reversible global installer (`install` / `uninstall` / `status` / `policy`), Linux implemented (WSL-verified), macOS implemented but unverified.
+- Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented but unverified.
 - The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
 - 162 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 
@@ -65,7 +65,7 @@ Two models in cascade, neither trained from scratch: a **frozen, pretrained mult
 git clone https://github.com/JeronimoRepetto/effort-autopilot.git
 cd effort-autopilot
 npm install
-npm test                                   # 146 local tests, no Claude calls
+npm test                                   # 162 local tests, no Claude calls
 node bin/effort-autopilot-cli.js install   # consent-gated, reversible
 # open a NEW terminal, cd into any project, and run: claude
 ```

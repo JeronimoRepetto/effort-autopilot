@@ -1,8 +1,8 @@
 # Troubleshooting
 
-## There is no `effort-autopilot` command
+## `effort-autopilot` is not recognized
 
-Expected. The rejected one-shot launcher was removed from npm bins and the package is private. The transparent broker has not reached a safe global-install stage. Do not create a PATH alias to the legacy script.
+The `effort-autopilot` command is the installer CLI (`bin/effort-autopilot-cli.js`). Until the package is published to npm, run it from a repository checkout as `node bin/effort-autopilot-cli.js <command>` — see [Installation](INSTALL.md). The rejected one-shot launcher has no binary at all and is internal-only (`node bin/effort-autopilot.js`, see [CLI.md](CLI.md)); do not create a PATH alias to it.
 
 ## Broker test reports unchanged effort
 

@@ -24,7 +24,7 @@ npm publish --access public
 ## Post-publication
 
 - Install from the registry on a clean machine/profile: `npm install -g @jeronimorepetto/claude-effort-autopilot`, then `effort-autopilot install`, smoke test, `effort-autopilot uninstall`.
-- Create the GitHub release pointing at the tag.
+- Update the existing GitHub release (source-install betas like `v0.3.0-beta.1` predate npm publication) or create one pointing at the published tag.
 - Record the published version and date here.
 
 | Version | Date | Notes |

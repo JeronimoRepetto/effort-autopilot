@@ -24,7 +24,7 @@ claude
 
 Submit one ordinary task. Claude Code will visibly show its hook-block warning, Effort Autopilot will classify locally, apply and confirm the selected effort when supported, then replay the exact task once. The stock warning is an upstream UI limitation; it is not a model request. Broker status lines are English by default and switch to Spanish when the prompt itself is clearly Spanish; the parenthesized cause codes stay in English for diagnostics. Prompts in other languages get English status lines and typically fail open (`insufficient-confidence`), because the classifier's feature patterns currently cover English and Spanish only.
 
-At startup the broker prints one line naming the session's pinned starting effort (taken from your local `effortLevel` setting, or `auto`); the pin is what keeps every automatic `/effort` session-only instead of saving your defaults. Mid-conversation escalations trigger the CLI's own `Change effort level?` confirmation, which the broker confirms itself.
+At startup the broker prints one line naming the session's starting effort (taken from your local `effortLevel` setting, or `auto`); that pin only makes the starting level known so already-active levels are never re-sent — it does not change persistence (see the caveat below). Mid-conversation escalations trigger the CLI's own `Change effort level?` confirmation, which the broker confirms itself.
 
 ## Precedence policy
 
@@ -55,4 +55,4 @@ Exit Claude and close the isolated PowerShell window. No global uninstall is nec
 Remove-Item -LiteralPath .\.effort-autopilot\isolated-shim -Recurse -Force
 ```
 
-Do not globally replace `claude` until the live trial has confirmed normal prompt, permission, editor, cancellation, and resume behavior.
+For a persistent setup, use the reversible global installer instead of any manual PATH change — see [Installation](INSTALL.md). This isolated window remains the recommended surface for trying changes before installing them globally.

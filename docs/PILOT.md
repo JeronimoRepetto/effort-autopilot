@@ -4,15 +4,15 @@
 
 ## Purpose and status
 
-`effort-autopilot-pilot` demonstrates and evaluates the complete lifecycle in a visible terminal. `evaluation/pilot-manifest.json` is a five-task **mock-only placeholder**. The separate inert `evaluation/live-pilot-humaneval-5.json` identifies the pinned first live subset; its public payload is generated only under the ignored local state directory. No live benchmark starts automatically.
+The internal pilot runner (`node bin/effort-autopilot-pilot.js`, no packaged binary) demonstrates and evaluates the complete lifecycle in a visible terminal. `evaluation/pilot-manifest.json` is a five-task **mock-only placeholder**. The separate inert `evaluation/live-pilot-humaneval-5.json` identifies the pinned first live subset; its public payload is generated only under the ignored local state directory. No live benchmark starts automatically.
 
 ## Commands
 
 ```text
-effort-autopilot-pilot dry-run [options]
-effort-autopilot-pilot run --live --confirm-subscription-use (--model <id> | --inherit-model) [options]
-effort-autopilot-pilot resume --live --confirm-subscription-use (--model <id> | --inherit-model) [options]
-effort-autopilot-pilot status [options]
+node bin/effort-autopilot-pilot.js dry-run [options]
+node bin/effort-autopilot-pilot.js run --live --confirm-subscription-use (--model <id> | --inherit-model) [options]
+node bin/effort-autopilot-pilot.js resume --live --confirm-subscription-use (--model <id> | --inherit-model) [options]
+node bin/effort-autopilot-pilot.js status [options]
 ```
 
 The trial limit must be `1..10` and defaults to 5. Live mode requires both confirmation flags plus either an explicit model or an explicit decision to inherit Claude Code's configured/default model.
@@ -36,7 +36,7 @@ The trial limit must be `1..10` and defaults to 5. Live mode requires both confi
 ## Visible PowerShell dry-run
 
 ```powershell
-Start-Process powershell -ArgumentList '-NoExit','-Command',"Set-Location '<path-to-your-clone>\effort-autopilot'; effort-autopilot-pilot dry-run --max-runs 5"
+Start-Process powershell -ArgumentList '-NoExit','-Command',"Set-Location '<path-to-your-clone>\effort-autopilot'; node bin/effort-autopilot-pilot.js dry-run --max-runs 5"
 ```
 
 The mock runner makes no network or Claude call and reports zero tokens/cost. Progress prints benchmark and task ID, selected effort, model label, concise reasons, verifier pass/fail, elapsed milliseconds, turns, token metrics, and cost estimate. It never prints the task prompt.
@@ -92,8 +92,8 @@ Terminal errors now preserve prompt-free structured fields when Claude supplies 
 ## Resume and status
 
 ```powershell
-effort-autopilot-pilot status --max-runs 5
-effort-autopilot-pilot resume --live --confirm-subscription-use --inherit-model --max-runs 5
+node bin/effort-autopilot-pilot.js status --max-runs 5
+node bin/effort-autopilot-pilot.js resume --live --confirm-subscription-use --inherit-model --max-runs 5
 ```
 
 Resume verifies the checkpoint benchmark and mode, skips completed task IDs, and reruns only pending work. A partial pending workspace is deleted and recopied from the source. It never repeats a completed paid trial.

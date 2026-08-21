@@ -1,6 +1,6 @@
 # Documentation
 
-This directory is the detailed reference for Effort Autopilot. The root [README](../README.md) states the experimental broker status; there is no end-user install yet.
+This directory is the detailed reference for Effort Autopilot. The root [README](../README.md) states the beta status; installation is from a repository checkout via the reversible installer ([Installation](INSTALL.md)) while the npm package remains unpublished.
 
 ## Start here
 

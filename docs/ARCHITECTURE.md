@@ -32,9 +32,9 @@ The broker never changes provider/model and never sends a classification request
 | Stock TUI semantic state detector | Resolved by `UserPromptSubmit`; no TUI-byte guessing |
 | `/effort` local command/ack | Installed CLI verified at `max`, zero inference |
 | `src/gateway/request-transform.js` | Synthetic supported-protocol proof only |
-| Global shim/settings installer | Not implemented or authorized |
+| Global shim installer | Implemented: consent-gated, reversible (`effort-autopilot install`/`uninstall`, see [INSTALL.md](INSTALL.md)); never touches Claude settings |
 | Installed zero-inference proof | Passed on Claude Code 2.1.238 |
-| Live one-prompt model proof | Not run; requires explicit authorization |
+| Live prompt proofs | User-authorized runs covered the applied branch (low and xhigh, incl. the escalation confirmation dialog), fail-open, and manual precedence |
 
 ## Broker lifecycle
 
@@ -69,9 +69,9 @@ sequenceDiagram
     end
 ```
 
-Both branches are unit-tested. The applied branch was also verified in the installed TUI with a diagnostic second block, so it reached no model. The stock UI visibly renders the first block; the hook API cannot make that interruption silent.
+Both branches are unit-tested, proven zero-inference against the installed TUI, and live-validated in user-authorized runs (applied low and xhigh — including the mid-conversation escalation confirmation dialog — plus fail-open and manual precedence). The stock UI visibly renders the first block; the hook API cannot make that interruption silent.
 
-While routing, the eventual broker pauses its stdin relay rather than parsing keystrokes. Permission answers, bracketed paste, Unicode, multiline bytes, and cancellation controls are forwarded unchanged after routing. The relay primitive is implemented and tested; the global runtime is not yet packaged.
+While routing, the broker pauses its stdin relay rather than parsing keystrokes. Permission answers, bracketed paste, Unicode, multiline bytes, and cancellation controls are forwarded unchanged after routing. The relay is wired into the packaged runtime, installed globally by the reversible installer ([INSTALL.md](INSTALL.md)).
 
 ## Gateway decision point
 
