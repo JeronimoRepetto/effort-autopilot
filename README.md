@@ -54,6 +54,10 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 
 **The end state**: install once from npm, run `claude` anywhere in any language, and every prompt silently gets the smallest effort that reliably does the job — measured, not guessed — with your manual choice always one `/effort` away.
 
+### How the mini-AI works (and why this design)
+
+Two models in cascade, neither trained from scratch: a **frozen, pretrained multilingual encoder** (`multilingual-e5-small` — chosen as the intersection of local-CPU ONNX execution, ~100-language coverage, best quality-per-MB in its size class, and a permissive license) turns the prompt into a meaning vector; a **tiny trained ordinal head** (proportional-odds regression: one weight vector + four cutpoints, a few KB, fully inspectable) turns that meaning into an effort tier with calibrated confidence. The encoder cannot decide by itself — it has no concept of "effort"; that mapping is a measured property of Claude's effort ladder, learned only from calibration runs. Training data comes from executing benchmark tasks at every effort level and labeling the minimum that reliably passes — never from intuition or another LLM. Full rationale, data sources, and evaluation criteria: [docs/CALIBRATION.md](docs/CALIBRATION.md). Any failure anywhere falls back to the deterministic classifier and then to the broker's fail-open.
+
 ## Try it
 
 ```powershell
