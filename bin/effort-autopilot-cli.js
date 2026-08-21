@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 import process from "node:process";
 
-import { runInstall, runSetPolicy, runStatus, runUninstall } from "../src/installer/installer.js";
+import {
+  runInstall,
+  runMlSetup,
+  runSetPolicy,
+  runStatus,
+  runUninstall,
+} from "../src/installer/installer.js";
 
 const HELP = `Effort Autopilot — transparent effort broker for the Claude Code CLI
 
 Usage: effort-autopilot <command>
 
 Commands:
-  install [--policy <manual-wins|autopilot-wins>] [--yes]
+  install [--policy <manual-wins|autopilot-wins>] [--yes] [--with-ml]
               Install the reversible 'claude' shim (asks for explicit consent).
+              --with-ml also downloads the local multilingual embedding model.
+  ml-setup    Download/verify the local ML model without reinstalling.
   uninstall   Remove the shim and restore your PATH exactly.
   status      Show platform, install state, real Claude path, and policy.
   policy <manual-wins|autopilot-wins>
@@ -32,11 +40,18 @@ function flagValue(name) {
 
 try {
   switch (command) {
-    case "install":
+    case "install": {
       process.exitCode = await runInstall({
         policyFlag: flagValue("--policy"),
         assumeYes: rest.includes("--yes"),
       });
+      if (process.exitCode === 0 && rest.includes("--with-ml")) {
+        process.exitCode = await runMlSetup({});
+      }
+      break;
+    }
+    case "ml-setup":
+      process.exitCode = await runMlSetup({});
       break;
     case "uninstall":
       process.exitCode = await runUninstall({});

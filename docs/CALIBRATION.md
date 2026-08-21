@@ -54,13 +54,14 @@ No specific dataset size guarantees calibration quality. Measure coverage, label
 
 ## Interpretable model
 
-Ordinal logistic regression is a suitable first learned baseline because tiers are ordered and coefficients remain inspectable. Candidate inputs include:
+The learned classifier is two models in cascade, and neither is trained from scratch:
 
-- transparent prompt features from the deterministic policy
-- cheap local project/environment metadata
-- a versioned active-model capability profile
+1. **A frozen, pretrained multilingual embedding model** ("the AI that understands the prompt"): an existing open model (default `Xenova/multilingual-e5-small`, ~100 MB quantized ONNX, ~100 languages) executed locally on CPU via the optional `@huggingface/transformers` dependency. Downloaded once at install; never fine-tuned; no network at classification time (`localFilesOnly`). This is what makes the classifier language-independent without collecting multilingual feature patterns by hand.
+2. **A trained ordinal head** ("the AI that returns the effort"): proportional-odds ordinal logistic regression over the embedding — one weight vector plus four strictly increasing cutpoints, a few KB, fully inspectable. Implemented in `src/core/ordinal-head.js`, trained by the dependency-free `src/core/ordinal-training.js` (`npm run ml:train`). Freezing the encoder and training only the head ("linear probing") is the standard transfer-learning choice for the hundreds-to-thousands of labels calibration will produce; full fine-tuning stays a future optimization that would not change this contract.
 
-Fit per-model parameters or a hierarchical model with explicit model/version features only after the data supports that complexity. Calibrate confidence on held-out data using a method appropriate to ordinal predictions. Report reliability diagrams and per-boundary error, not only aggregate accuracy.
+Candidate additional inputs for the head remain: transparent prompt features from the deterministic policy, cheap local project/environment metadata, and a versioned active-model capability profile. Fit per-model parameters or a hierarchical model only after the data supports that complexity. Calibrate confidence on held-out data using a method appropriate to ordinal predictions. Report reliability diagrams and per-boundary error, not only aggregate accuracy.
+
+The runtime chain is already integrated behind the same envelope contract (`src/core/learned-classifier.js`): learned classifier → deterministic classifier on any failure or missing artifact → the broker's fail-open. It activates only when config sets `"ml": true` AND the model cache and a valid trained artifact exist; until calibration ships an artifact, the deterministic classifier runs.
 
 ## Optimization and release criteria
 

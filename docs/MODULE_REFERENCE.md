@@ -9,6 +9,11 @@
 | [`src/core/model-profiles.js`](../src/core/model-profiles.js) | Exact versioned model capabilities and bootstrap offsets |
 | [`src/core/protocol.js`](../src/core/protocol.js) | Safe host-neutral envelope and malformed-input fallback |
 | [`src/core/environment.js`](../src/core/environment.js) | Bounded cheap local project metadata |
+| [`src/core/ordinal-head.js`](../src/core/ordinal-head.js) | Proportional-odds ordinal head: artifact validation and microsecond pure-JS inference |
+| [`src/core/ordinal-training.js`](../src/core/ordinal-training.js) | Dependency-free trainer with monotonic cutpoints (gradient descent, L2) |
+| [`src/core/embedding-provider.js`](../src/core/embedding-provider.js) | Optional local multilingual embedding model (ONNX CPU) — the only seam touching `@huggingface/transformers` |
+| [`src/core/learned-classifier.js`](../src/core/learned-classifier.js) | Learned classifier with the classifyEnvelope contract and deterministic fallback chain; installed-artifact loader |
+| [`scripts/train-ordinal-head.mjs`](../scripts/train-ordinal-head.mjs) | CLI trainer (`npm run ml:train`) from JSONL features/prompts to a versioned artifact |
 | [`src/broker/turn-controller.js`](../src/broker/turn-controller.js) | User override precedence, fail-open causes, acknowledgement, exact-once forwarding, prompt-free status |
 | [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, session/model state |
 | [`src/broker/replay-authorizations.js`](../src/broker/replay-authorizations.js) | Expiring session-bound prompt-digest authorizations, held only in memory and consumed once |
@@ -72,6 +77,8 @@
 | [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip |
 | [`test/messages.test.js`](../test/messages.test.js) | Language detection defaults and untranslated cause codes in both catalogs |
 | [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain |
+| [`test/ordinal-head.test.js`](../test/ordinal-head.test.js) | Artifact validation, probability sanity, tier monotonicity, synthetic training convergence and determinism |
+| [`test/learned-classifier.test.js`](../test/learned-classifier.test.js) | Decision-contract fidelity, profile clamping, and the full deterministic fallback chain with fake embedders |
 | [`test/session-observer.test.js`](../test/session-observer.test.js) | Manual `/effort` and `/model` acknowledgement attribution, broker-window suppression, chunk splits |
 | [`test/gateway-transform.test.js`](../test/gateway-transform.test.js) | Effort-only body mutation, exact model, failure modes, stream bytes, privacy |
 | [`test/classifier.test.js`](../test/classifier.test.js) | Six tiers, boundaries, multilingual and model-aware regression |

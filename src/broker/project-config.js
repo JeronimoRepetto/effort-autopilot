@@ -32,6 +32,7 @@ function parseConfigDocument(raw) {
   return Object.freeze({
     enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : undefined,
     policy: AUTOPILOT_POLICIES.includes(parsed.policy) ? parsed.policy : undefined,
+    ml: typeof parsed.ml === "boolean" ? parsed.ml : undefined,
     invalid: false,
   });
 }
@@ -40,7 +41,7 @@ export function readProjectConfig({ cwd, readFile = defaultReadFile } = {}) {
   try {
     return parseConfigDocument(readFile(path.join(cwd, PROJECT_CONFIG_FILENAME)));
   } catch {
-    return Object.freeze({ enabled: undefined, policy: undefined, invalid: false });
+    return Object.freeze({ enabled: undefined, policy: undefined, ml: undefined, invalid: false });
   }
 }
 
@@ -48,7 +49,7 @@ export function readGlobalConfig({ readFile = defaultReadFile, ...pathOptions } 
   try {
     return parseConfigDocument(readFile(globalConfigPath(pathOptions)));
   } catch {
-    return Object.freeze({ enabled: undefined, policy: undefined, invalid: false });
+    return Object.freeze({ enabled: undefined, policy: undefined, ml: undefined, invalid: false });
   }
 }
 

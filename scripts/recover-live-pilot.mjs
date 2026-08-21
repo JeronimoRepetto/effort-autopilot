@@ -32,8 +32,7 @@ const recovered = await recoverVerifiedTerminalTrial({
 
 process.stdout.write(
   `recovered=${recovered.recovered} reason=${recovered.reason} ` +
-  `completed=${recovered.summary.completed} pending=${recovered.summary.pending} ` +
-  `verified_after_terminal=${recovered.summary.verifiedAfterTerminal}\n`,
+    `completed=${recovered.summary.completed} pending=${recovered.summary.pending} ` +
+    `verified_after_terminal=${recovered.summary.verifiedAfterTerminal}\n`,
 );
 process.stdout.write("No Claude or model call was made.\n");
-

@@ -13,25 +13,33 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const hookScript = path.join(root, "bin", "internal-effort-autopilot-hook.js");
 const guardHookScript = path.join(root, "bin", "internal-zero-inference-guard-hook.js");
 const prompt = "EFFORT_AUTOPILOT_ZERO_INFERENCE_REPLAY_TEST á ☕\nSECOND_LINE_保持_FIDELITY";
-const claudeExecutable = process.env.EFFORT_AUTOPILOT_REAL_CLAUDE ?? (
-  process.platform === "win32"
+const claudeExecutable =
+  process.env.EFFORT_AUTOPILOT_REAL_CLAUDE ??
+  (process.platform === "win32"
     ? execFileSync("where.exe", ["claude"], { encoding: "utf8" }).trim().split(/\r?\n/)[0]
-    : "claude"
-);
+    : "claude");
 const temporary = await mkdtemp(path.join(os.tmpdir(), "effort-autopilot-hybrid-"));
 const settingsPath = path.join(temporary, "settings.json");
 const quote = (value) => `"${value.replaceAll('"', '\\"')}"`;
 const hookCommand = `${quote(process.execPath)} ${quote(hookScript)}`;
 const guardHookCommand = `${quote(process.execPath)} ${quote(guardHookScript)}`;
-await writeFile(settingsPath, JSON.stringify({
-  hooks: {
-    SessionStart: [{ hooks: [{ type: "command", command: hookCommand, timeout: 5 }] }],
-    UserPromptSubmit: [{ hooks: [
-      { type: "command", command: hookCommand, timeout: 5 },
-      { type: "command", command: guardHookCommand, timeout: 5 },
-    ] }],
-  },
-}), { encoding: "utf8", mode: 0o600 });
+await writeFile(
+  settingsPath,
+  JSON.stringify({
+    hooks: {
+      SessionStart: [{ hooks: [{ type: "command", command: hookCommand, timeout: 5 }] }],
+      UserPromptSubmit: [
+        {
+          hooks: [
+            { type: "command", command: hookCommand, timeout: 5 },
+            { type: "command", command: guardHookCommand, timeout: 5 },
+          ],
+        },
+      ],
+    },
+  }),
+  { encoding: "utf8", mode: 0o600 },
+);
 
 const enterSequences = Object.freeze({
   cr: "\r",
@@ -65,24 +73,26 @@ const server = await startBrokerIpcServer({
   onBlocked: ({ ticketId }) => {
     if (firstTicket) return;
     firstTicket = ticketId;
-    routingPromise = coordinator.routeTicket(ticketId, {
-      classifier: () => ({
-        status: "ok",
-        decision: {
-          tier: "max",
-          confidence: 1,
-          reasons: ["zero-inference diagnostic"],
-          execution: { claudeEffort: "max" },
-          context: { modelProfileId: coordinator.sessions.values().next().value?.model ?? null },
-        },
-      }),
-      config: { ceiling: "max", baselineEffort: "max" },
-      applyEffort: (effort) => session.applyEffort(effort),
-      reinjectPrompt: (value) => session.forwardPrompt(value),
-    }).then((result) => {
-      routeResult = result;
-      return result;
-    });
+    routingPromise = coordinator
+      .routeTicket(ticketId, {
+        classifier: () => ({
+          status: "ok",
+          decision: {
+            tier: "max",
+            confidence: 1,
+            reasons: ["zero-inference diagnostic"],
+            execution: { claudeEffort: "max" },
+            context: { modelProfileId: coordinator.sessions.values().next().value?.model ?? null },
+          },
+        }),
+        config: { ceiling: "max", baselineEffort: "max" },
+        applyEffort: (effort) => session.applyEffort(effort),
+        reinjectPrompt: (value) => session.forwardPrompt(value),
+      })
+      .then((result) => {
+        routeResult = result;
+        return result;
+      });
   },
 });
 
@@ -100,12 +110,7 @@ function waitUntil(predicate, timeoutMs = 10_000) {
 
 try {
   stage = "spawn";
-  session = PtySession.spawn(claudeExecutable, [
-    "--effort",
-    "max",
-    "--settings",
-    settingsPath,
-  ], {
+  session = PtySession.spawn(claudeExecutable, ["--effort", "max", "--settings", settingsPath], {
     cwd: root,
     env: {
       ...process.env,
@@ -132,8 +137,8 @@ try {
     exactModel: registered?.model ?? null,
     firstSubmissionBlocked: Boolean(firstTicket),
     effortAcknowledged: routeResult?.outcome === "applied" && routeResult?.appliedEffort === "max",
-    replayReachedDiagnosticBlock: authorizedReplayDecision?.action === "block" &&
-      authorizedReplayDecision?.diagnostic === true,
+    replayReachedDiagnosticBlock:
+      authorizedReplayDecision?.action === "block" && authorizedReplayDecision?.diagnostic === true,
     multilineUnicodePromptFidelity: authorizedReplayDecision?.authorizedReplay === true,
     zeroInferenceGuardObserved: guardInvocations >= 2,
     enterMode,
@@ -149,10 +154,7 @@ try {
   session.write("/exit");
   await new Promise((resolve) => setTimeout(resolve, 25));
   session.write(enterSequence);
-  await Promise.race([
-    session.exitPromise,
-    new Promise((resolve) => setTimeout(resolve, 3000)),
-  ]);
+  await Promise.race([session.exitPromise, new Promise((resolve) => setTimeout(resolve, 3000))]);
 } catch (error) {
   const safeTail = (session?.buffer ?? "")
     .slice(-4000)

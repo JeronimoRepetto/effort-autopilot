@@ -47,6 +47,7 @@
     "pilot:prepare-live": "node scripts/prepare-live-pilot.mjs",
     "pilot:recover-live": "node scripts/recover-live-pilot.mjs",
     "lint": "eslint .",
+    "ml:train": "node scripts/train-ordinal-head.mjs",
     "format": "prettier --write \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
     "format:check": "prettier --check \"src/**/*.js\" \"bin/*.js\" \"test/**/*.js\" \"scripts/*.mjs\"",
     "test": "node scripts/run-tests.mjs",
@@ -63,6 +64,14 @@
   },
   "dependencies": {
     "node-pty": "^1.1.0"
+  },
+  "peerDependencies": {
+    "@huggingface/transformers": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

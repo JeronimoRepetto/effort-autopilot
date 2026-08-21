@@ -9,11 +9,13 @@ const testRoot = path.join(root, "test");
 
 async function collectTests(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
-  const nested = await Promise.all(entries.map(async (entry) => {
-    const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) return collectTests(absolute);
-    return entry.isFile() && entry.name.endsWith(".test.js") ? [absolute] : [];
-  }));
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) return collectTests(absolute);
+      return entry.isFile() && entry.name.endsWith(".test.js") ? [absolute] : [];
+    }),
+  );
   return nested.flat();
 }
 

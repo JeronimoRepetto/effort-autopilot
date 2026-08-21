@@ -48,6 +48,10 @@ Control: every task gets a fresh copied workspace and direct verifier invocation
 
 Control: prompt input is limited to 1 MiB, model profiles to 128 KiB, and combined Claude stdout/stderr to 32 MiB. Metadata reads are bounded and avoid a recursive filesystem walk.
 
+## Local ML model
+
+The optional learned classifier downloads a pretrained multilingual embedding model once, during explicit `effort-autopilot install --with-ml` / `ml-setup`, into the install root. Classification loads it with `localFilesOnly` — no network is ever touched while classifying, and prompts are embedded in-process and discarded. The trained ordinal-head artifact is a small local JSON validated before use; an invalid or missing artifact silently keeps the deterministic classifier. The only module importing the optional dependency is `src/core/embedding-provider.js`, enforced by test.
+
 ## Telemetry policy
 
 The default application has no analytics or telemetry. Future calibration telemetry must be strictly opt-in and should collect derived features/outcomes rather than raw prompts. Raw prompt collection requires separate consent, retention/deletion policy, access controls, and security review.

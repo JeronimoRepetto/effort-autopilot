@@ -55,6 +55,15 @@ disables the broker for that project (Claude runs completely unchanged, with a v
 - If resolution ever loops back to the shim, a recursion guard aborts with a clear error instead of looping.
 - Launch shapes the broker cannot handle safely (`--print`, `--resume`/`--continue`, an uncombinable `--settings`, project opt-out) run Claude completely unchanged with a visible notice.
 
+## Optional: local multilingual mini-AI
+
+```powershell
+npm install @huggingface/transformers        # optional dependency, once
+node bin/effort-autopilot-cli.js install --with-ml   # or: effort-autopilot ml-setup
+```
+
+This downloads a frozen, pretrained multilingual embedding model (~100 MB, ONNX, runs on any CPU, ~100 languages) into the install root — a one-time download; classification itself never touches the network. The learned classifier activates only when config sets `"ml": true` (globally in the install `config.json` or per project) **and** a trained ordinal-head artifact exists. Until the calibration phase ships that artifact, the deterministic classifier keeps running; every failure in the learned path falls back deterministically and then to the broker's fail-open.
+
 ## Known accepted behavior
 
 On Claude Code 2.1.238, every `/effort` change except `max` also saves that level as your global default (upstream behavior; the broker discloses it on each application). With the autopilot active this is inconsequential — effort is re-decided per prompt — but where the broker does not run (opted-out projects, after uninstall) your default will be whatever level was applied last. Reset it any time with `/effort <level>` in a plain Claude session.

@@ -267,7 +267,10 @@ export async function runStatus({
   } catch {
     // stays null: not found is a reportable state, not an error
   }
-  const globalPolicy = readGlobalConfig(options).policy ?? null;
+  const globalConfig = readGlobalConfig(options);
+  const globalPolicy = globalConfig.policy ?? null;
+  const { mlPaths } = await import("../core/learned-classifier.js");
+  const { artifactPath, cacheDir } = mlPaths(options);
   output.write(
     `${JSON.stringify(
       {
@@ -279,10 +282,45 @@ export async function runStatus({
         realClaude,
         policy: globalPolicy ?? "manual-wins",
         policySource: globalPolicy ? "global config" : "default",
+        ml: {
+          enabled: globalConfig.ml === true,
+          modelCachePresent: existsSync(cacheDir),
+          trainedArtifactPresent: existsSync(artifactPath),
+        },
       },
       null,
       2,
     )}\n`,
+  );
+  return 0;
+}
+
+export async function runMlSetup({
+  platform = process.platform,
+  env = process.env,
+  home = os.homedir(),
+  output = process.stdout,
+} = {}) {
+  const options = { platform, env, home };
+  const { mlPaths } = await import("../core/learned-classifier.js");
+  const { createTransformersEmbedder } = await import("../core/embedding-provider.js");
+  const { cacheDir, artifactPath } = mlPaths(options);
+  mkdirSync(cacheDir, { recursive: true });
+  output.write("Downloading the local multilingual embedding model (one-time, ~100 MB)...\n");
+  const embedder = await createTransformersEmbedder({ cacheDir });
+  if (!embedder) {
+    output.write(
+      "The optional ML dependency is not installed. Run:\n" +
+        "  npm install @huggingface/transformers\n" +
+        "and then re-run: effort-autopilot install --with-ml\n",
+    );
+    return 1;
+  }
+  const vector = await embedder.embed("warmup: verify the local embedding pipeline");
+  output.write(
+    `Model ${embedder.modelId} ready (${vector.length} dimensions, cached at ${cacheDir}).\n` +
+      `Classification stays fully local. The trained ordinal head is expected at ${artifactPath}; ` +
+      "until the calibration phase ships one, the deterministic classifier remains active.\n",
   );
   return 0;
 }

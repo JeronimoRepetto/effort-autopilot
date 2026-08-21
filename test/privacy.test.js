@@ -28,8 +28,19 @@ test("decision contains signals and reasons but never prompt text", () => {
   assert.ok(result.reasons.length > 0);
 });
 
+// The learned-classifier stack (embedding-provider, learned-classifier,
+// ordinal-head, ordinal-training) legitimately mentions embeddings and the
+// optional local model; it has its own network-free guarantees below.
+const DETERMINISTIC_CORE = [
+  "classifier.js",
+  "policy.js",
+  "protocol.js",
+  "environment.js",
+  "model-profiles.js",
+];
+
 test("local classifier source has no network, retrieval, model, or persistence primitives", async () => {
-  const files = await sourceFiles(path.join(root, "src", "core"));
+  const files = DETERMINISTIC_CORE.map((name) => path.join(root, "src", "core", name));
   const source = (await Promise.all(files.map((file) => readFile(file, "utf8")))).join("\n");
   const forbidden = [
     /node:https?/,
@@ -48,4 +59,33 @@ test("local classifier source has no network, retrieval, model, or persistence p
   for (const pattern of forbidden) {
     assert.doesNotMatch(source, pattern);
   }
+});
+
+test("the learned-classifier stack is network-free and isolates the optional dependency", async () => {
+  const files = await sourceFiles(path.join(root, "src", "core"));
+  const learnedFiles = files.filter((file) => !DETERMINISTIC_CORE.includes(path.basename(file)));
+  assert.ok(learnedFiles.length >= 3, "expected the learned-classifier stack under src/core");
+  const importers = [];
+  for (const file of learnedFiles) {
+    const source = await readFile(file, "utf8");
+    // No direct network or persistence primitives at classification time.
+    for (const pattern of [
+      /node:https?/,
+      /node:net/,
+      /\bfetch\s*\(/,
+      /XMLHttpRequest/,
+      /WebSocket/,
+      /writeFile/,
+      /appendFile/,
+      /createWriteStream/,
+    ]) {
+      assert.doesNotMatch(source, pattern, `${path.basename(file)} matches ${pattern}`);
+    }
+    if (source.includes("@huggingface/transformers")) importers.push(path.basename(file));
+  }
+  // Exactly one seam touches the optional model dependency, and the installed
+  // loader pins classification to cached local files only.
+  assert.deepEqual(importers, ["embedding-provider.js"]);
+  const loader = await readFile(path.join(root, "src", "core", "learned-classifier.js"), "utf8");
+  assert.match(loader, /localFilesOnly: true/);
 });

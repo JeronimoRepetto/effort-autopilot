@@ -48,7 +48,7 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 | 1 | Hybrid hook + ConPTY broker, live validation | ✅ done |
 | 2 | Reversible global installer, per-project config, precedence policies | ✅ done |
 | 3 | npm packaging preparation (`@jeronimorepetto/claude-effort-autopilot`) | ✅ prepared, unpublished |
-| 4 | **Multilingual mini-AI**: a frozen, pretrained multilingual embedding model (~100 MB, ONNX, local CPU, ~100 languages) + a tiny ordinal head trained on real calibration data — replacing today's hand-written weights while keeping the zero-token/zero-network contract | infrastructure next |
+| 4 | **Multilingual mini-AI**: a frozen, pretrained multilingual embedding model (~100 MB, ONNX, local CPU, ~100 languages) + a tiny ordinal head trained on real calibration data — replacing today's hand-written weights while keeping the zero-token/zero-network contract | ✅ infrastructure built (runtime, trainer, fallback chain, `install --with-ml`); awaits calibration data |
 | 5 | Calibration pipeline: run benchmark tasks at every effort level, label the minimum sufficient effort, train and evaluate against always-low/medium/high baselines | designed ([CALIBRATION.md](docs/CALIBRATION.md)) |
 | 6 | npm publication ([release checklist](docs/RELEASE_CHECKLIST.md)), macOS verification | gated on explicit authorization |
 

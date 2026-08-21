@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 
+import { loadInstalledLearnedClassifier } from "../core/learned-classifier.js";
 import { classifyEnvelope } from "../core/protocol.js";
 import { parseClaudeLaunchArgs } from "./claude-args.js";
 import { findRealClaudeExecutable } from "./claude-locator.js";
@@ -107,10 +108,11 @@ export async function runInteractiveBroker({
     });
   }
 
+  const globalConfig = readGlobalConfig({ home });
   const resolvedPolicy = resolveAutopilotPolicy({
     launchPolicy: launch.autopilotPolicy,
     projectPolicy: projectConfig.policy,
-    globalPolicy: readGlobalConfig({ home }).policy,
+    globalPolicy: globalConfig.policy,
   });
   const autopilotWins = resolvedPolicy.policy === "autopilot-wins";
   if (launch.invalidAutopilotPolicy) {
@@ -124,9 +126,9 @@ export async function runInteractiveBroker({
     );
   }
 
-  // Claude Code 2.1.238 persists `/effort` as the saved default unless the
-  // session started with an explicit `--effort` scope. Pinning the scope at
-  // spawn is what keeps every automatic change session-only.
+  // The `--effort` spawn pin does not scope later /effort commands (every
+  // level except max persists the saved default regardless); it is kept so
+  // the session's starting level is known for the same-level skip.
   const baseline = launch.effort ? null : resolveSessionEffortBaseline({ cwd, home });
   if (launch.effort) {
     errorOutput.write(
@@ -136,8 +138,29 @@ export async function runInteractiveBroker({
     );
   } else {
     errorOutput.write(
-      `Effort Autopilot: session effort starts at ${baseline.effort} (${baseline.source}); automatic changes are session-only.\r\n`,
+      `Effort Autopilot: session effort starts at ${baseline.effort} (${baseline.source}).\r\n`,
     );
+  }
+
+  // Learned classifier (frozen multilingual embeddings + trained ordinal
+  // head): opt-in via config, present only when the model cache and artifact
+  // exist. Everything else keeps the deterministic classifier; either way the
+  // broker's fail-open contract is unchanged.
+  let classifier = classifyEnvelope;
+  let classificationTimeoutMs;
+  if ((projectConfig.ml ?? globalConfig.ml) === true) {
+    const learned = loadInstalledLearnedClassifier({ home });
+    if (learned) {
+      classifier = learned.classifier;
+      classificationTimeoutMs = 1500;
+      errorOutput.write(
+        `Effort Autopilot: learned classifier active (${learned.embeddingModel ?? "local embeddings"} + ordinal head${learned.datasetVersion ? `, dataset ${learned.datasetVersion}` : ""}).\r\n`,
+      );
+    } else {
+      errorOutput.write(
+        "Effort Autopilot: ml is enabled in config but the local model or trained artifact is missing; using the deterministic classifier. Run: effort-autopilot ml-setup\r\n",
+      );
+    }
   }
 
   const temporary = await mkdtemp(path.join(os.tmpdir(), "effort-autopilot-session-"));
@@ -184,7 +207,8 @@ export async function runInteractiveBroker({
       relay?.pauseForRouting();
       const route = coordinator
         .routeTicket(ticketId, {
-          classifier: classifyEnvelope,
+          classifier,
+          classificationTimeoutMs,
           config: { ceiling: "max", baselineEffort: "medium" },
           applyEffort: async (effort) => {
             if (policy.shouldSkipApplication(effort)) {

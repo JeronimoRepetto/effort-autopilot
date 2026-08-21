@@ -114,11 +114,13 @@ test("project config reads enabled/policy tolerantly and flags invalid documents
   assert.deepEqual(read(JSON.stringify({ enabled: false })), {
     enabled: false,
     policy: undefined,
+    ml: undefined,
     invalid: false,
   });
-  assert.deepEqual(read(`\uFEFF${JSON.stringify({ policy: "autopilot-wins" })}`), {
+  assert.deepEqual(read(`\uFEFF${JSON.stringify({ policy: "autopilot-wins", ml: true })}`), {
     enabled: undefined,
     policy: "autopilot-wins",
+    ml: true,
     invalid: false,
   });
   assert.equal(read('{"policy": "turbo"}').policy, undefined);
@@ -129,7 +131,12 @@ test("project config reads enabled/policy tolerantly and flags invalid documents
       throw new Error("ENOENT");
     },
   });
-  assert.deepEqual(missing, { enabled: undefined, policy: undefined, invalid: false });
+  assert.deepEqual(missing, {
+    enabled: undefined,
+    policy: undefined,
+    ml: undefined,
+    invalid: false,
+  });
 });
 
 test("policy resolution honors launch > project > global > default", () => {

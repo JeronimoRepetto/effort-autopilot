@@ -54,7 +54,8 @@ async function loadPinnedDataset(cacheFile) {
 }
 
 function verifierSource(task) {
-  return `# Generated from pinned OpenAI HumanEval test data. Do not edit.\n` +
+  return (
+    `# Generated from pinned OpenAI HumanEval test data. Do not edit.\n` +
     `import ast\n` +
     `import builtins\n` +
     `import math\n` +
@@ -90,18 +91,21 @@ function verifierSource(task) {
     `test_namespace = dict(namespace)\n` +
     `test_namespace["__builtins__"] = builtins.__dict__\n` +
     `exec(TEST_SOURCE, test_namespace, test_namespace)\n` +
-    `test_namespace["check"](namespace[ENTRY_POINT])\n`;
+    `test_namespace["check"](namespace[ENTRY_POINT])\n`
+  );
 }
 
 function taskInstructions(task) {
-  return `# ${task.task_id}\n\n` +
+  return (
+    `# ${task.task_id}\n\n` +
     `Make the minimum required edit in \`candidate.py\` only. Implement the public ` +
     `OpenAI HumanEval function below while preserving its name and signature. ` +
     `Use this exact workflow: read \`candidate.py\` if needed, edit only that file, ` +
     `then immediately return a brief completion message. Do not inspect any other ` +
     `file, run commands or tests, install dependencies, or edit verifier/source metadata. ` +
     `The external harness performs verification after Claude exits.\n\n` +
-    `## Public task\n\n\`\`\`python\n${task.prompt}\`\`\`\n`;
+    `## Public task\n\n\`\`\`python\n${task.prompt}\`\`\`\n`
+  );
 }
 
 function validatePython(workspace, expectedSuccess) {
@@ -145,20 +149,10 @@ async function prepareTask(task, fixturesRoot) {
 }
 
 async function main() {
-  const cacheFile = path.join(
-    ROOT,
-    ".effort-autopilot",
-    "benchmark-cache",
-    "HumanEval.jsonl.gz",
-  );
+  const cacheFile = path.join(ROOT, ".effort-autopilot", "benchmark-cache", "HumanEval.jsonl.gz");
   const dataset = await loadPinnedDataset(cacheFile);
   const byId = new Map(dataset.map((task) => [task.task_id, task]));
-  const fixturesRoot = path.join(
-    ROOT,
-    ".effort-autopilot",
-    "benchmark-fixtures",
-    "humaneval",
-  );
+  const fixturesRoot = path.join(ROOT, ".effort-autopilot", "benchmark-fixtures", "humaneval");
   for (const id of TASK_IDS) {
     const task = byId.get(id);
     if (!task) throw new Error(`Pinned HumanEval task is missing: ${id}`);
