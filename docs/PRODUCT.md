@@ -11,7 +11,8 @@ The old one-shot launcher is not an alternative, fallback, or public command. It
 - **broker**: local process that owns the real CLI's terminal transport while preserving the child session.
 - **exact active model**: resolved immutable model/version, never an ambiguous family alias.
 - **automatic effort**: classifier recommendation that the host positively acknowledged for the pending task.
-- **explicit user effort**: a CLI argument, environment/session choice, or observed `/effort` choice made by the user; it always wins.
+- **explicit user effort**: a CLI argument, environment/session choice, or observed `/effort` choice made by the user; it always wins under `manual-wins` (the default policy).
+- **standing manual choice**: under `autopilot-wins`, the session level set by an observed manual `/effort` or a launch `--effort` flag, not yet overwritten; it is respected by the uncertainty floor but re-evaluated by confident classifications. Cleared by `/effort auto` or by any applied automatic turn.
 - **unchanged**: no intentional automatic effort mutation; use Claude's active/default/user-selected value.
 - **one forward**: the original task submission is delivered once. Claude Code can still perform normal agentic model/tool turns internally.
 - **ultracode**: orchestration mode, not a model effort level; never activated by the broker.
@@ -36,15 +37,19 @@ No preliminary model call is allowed. Provider/model cannot change.
 
 ## Fail-open contract
 
-An explicit user effort choice has precedence. The broker leaves effort unchanged and forwards once when any of these applies:
+An explicit user effort choice has precedence under `manual-wins`; under `autopilot-wins` a manual choice stands only against the uncertainty floor. The broker leaves effort unchanged and forwards once when any of these applies:
 
 - model/version unsupported or ambiguous;
-- confidence below the configured threshold;
+- confidence below the configured threshold — except the autopilot-wins uncertainty floor below;
 - classification failure or timeout;
 - terminal state not positively identified as top-level task entry;
 - proposed effort not positively acknowledged.
 
 Status must distinguish `applied` from `unchanged` and state a prompt-free cause. No block, duplicate, retry, prompt rewrite, prompt persistence, or fallback to the old launcher is allowed. A future explicit strict mode may pause instead, but does not exist today.
+
+### Uncertainty floor under autopilot-wins (product decision, 2026-08-22, issue #2)
+
+Under the `autopilot-wins` policy the user has delegated effort control, so an uncertain classification (confidence below the broker threshold, or not a finite number) no longer always means "unchanged": the broker raises the session to `high` (clamped by the savings ceiling) through the same mandatory acknowledgement path, reporting `applied` with the `uncertainty-floor-acknowledged` cause. Two exceptions keep the user in charge: a standing manual `/effort` choice (or launch `--effort` flag) not yet cleared by `/effort auto` or overwritten by an applied automatic turn is respected (`insufficient-confidence-manual-respected`), and a session already at or above the floor is left alone (`insufficient-confidence-floor-met`). Under `manual-wins` — the default — low confidence remains a pure fail-open no-change (`insufficient-confidence`). Error paths (timeout, classification failure, missing acknowledgement) stay fail-open under both policies.
 
 ## Current implementation boundary
 

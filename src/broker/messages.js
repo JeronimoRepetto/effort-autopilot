@@ -27,6 +27,8 @@ const CATALOG = Object.freeze({
     explicitUserEffort:
       "Effort Autopilot: keeping your manual effort choice (explicit-user-effort).",
     applied: (effort, model) => `Effort Autopilot: applied ${effort} for ${model}.`,
+    appliedUncertaintyFloor: (effort, model) =>
+      `Effort Autopilot: classification was uncertain, so effort was floored at ${effort} for ${model} (uncertainty-floor-acknowledged).`,
     appliedPersistNote: " The CLI also saved this level as your default (upstream behavior).",
     unchanged: (cause) => `Effort Autopilot: automatic effort unchanged (${cause}).`,
     brokerUnavailable: "Effort Autopilot: automatic effort unchanged (broker unavailable).",
@@ -38,6 +40,8 @@ const CATALOG = Object.freeze({
     explicitUserEffort:
       "Effort Autopilot: se mantiene tu elección manual de esfuerzo (explicit-user-effort).",
     applied: (effort, model) => `Effort Autopilot: esfuerzo ${effort} aplicado para ${model}.`,
+    appliedUncertaintyFloor: (effort, model) =>
+      `Effort Autopilot: la clasificación fue incierta, así que el esfuerzo se fijó como mínimo en ${effort} para ${model} (uncertainty-floor-acknowledged).`,
     appliedPersistNote:
       " El CLI también guardó este nivel como tu valor por defecto (comportamiento del CLI).",
     unchanged: (cause) => `Effort Autopilot: esfuerzo automático sin cambios (${cause}).`,

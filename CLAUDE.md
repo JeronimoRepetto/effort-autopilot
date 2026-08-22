@@ -26,7 +26,7 @@ History shows why this is a safeguard and not bureaucracy: phases repeatedly out
 
 - Classification consumes zero model tokens and makes no network call; prompts are never persisted or logged.
 - Exact model/provider never changed; prompt forwarded byte-for-byte, exactly once; no hidden retries.
-- Fail-open on any doubt, always visibly reported with a prompt-free cause code.
+- Fail-open on any error, always visibly reported with a prompt-free cause code. Deliberate exception (issue #2): under `autopilot-wins`, an uncertain classification applies an acknowledged `high` floor instead, unless a standing manual choice or an already-sufficient level applies.
 - Explicit user effort wins under `manual-wins` (default policy).
 - The user's Claude settings are never written (the CLI's own saved-default side effect is disclosed, accepted behavior).
 

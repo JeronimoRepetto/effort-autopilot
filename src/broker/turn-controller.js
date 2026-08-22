@@ -1,6 +1,11 @@
 import { resolveModelProfile } from "../core/model-profiles.js";
 import { classifyEnvelope } from "../core/protocol.js";
-import { resolveExecutionPlan } from "../launcher/plan.js";
+import {
+  DEFAULT_SAVINGS_CONFIG,
+  isEffort,
+  lowerOf,
+  resolveExecutionPlan,
+} from "../launcher/plan.js";
 
 const DEFAULT_TIMEOUT_MS = 250;
 const DEFAULT_MIN_CONFIDENCE = 0.55;
@@ -17,14 +22,21 @@ function unchangedMetadata(cause, model, activeEffort) {
   });
 }
 
-function appliedMetadata(plan, model, activeEffort, acknowledgement) {
+function appliedMetadata(
+  effort,
+  model,
+  activeEffort,
+  acknowledgement,
+  { cause = "automatic-effort-acknowledged", uncertaintyFloor = false } = {},
+) {
   return Object.freeze({
     outcome: "applied",
-    cause: "automatic-effort-acknowledged",
+    cause,
     model,
-    requestedEffort: plan.effort,
-    appliedEffort: plan.effort,
+    requestedEffort: effort,
+    appliedEffort: effort,
     activeEffort: activeEffort ?? null,
+    uncertaintyFloor,
     viaConfirmationDialog: acknowledgement?.viaDialog === true,
     savedDefaultSideEffect:
       acknowledgement?.viaDialog === true || acknowledgement?.persistsSavedDefault === true,
@@ -70,6 +82,8 @@ export async function brokerTurn({
   onStatus,
   classificationTimeoutMs = DEFAULT_TIMEOUT_MS,
   minimumConfidence = DEFAULT_MIN_CONFIDENCE,
+  uncertaintyFloorEffort = null,
+  manualEffortStanding = false,
 } = {}) {
   if (typeof prompt !== "string" || prompt.length === 0) {
     throw new TypeError("prompt must be a non-empty string");
@@ -116,26 +130,44 @@ export async function brokerTurn({
     return finishUnchanged(cause);
   }
   if (classification?.status !== "ok") return finishUnchanged("classification-failed");
+
+  const applyAndForward = async (effort, options) => {
+    let acknowledgement;
+    try {
+      acknowledgement = await applyEffort(effort);
+    } catch {
+      acknowledgement = null;
+    }
+    if (acknowledgement?.acknowledged !== true || acknowledgement?.effort !== effort) {
+      return finishUnchanged("effort-not-acknowledged");
+    }
+    const metadata = appliedMetadata(effort, activeModel, activeEffort, acknowledgement, options);
+    await forwardOnce(metadata);
+    await onStatus?.(metadata);
+    return metadata;
+  };
+
   if (
     !Number.isFinite(classification.decision?.confidence) ||
     classification.decision.confidence < minimumConfidence
   ) {
-    return finishUnchanged("insufficient-confidence");
+    // Uncertainty floor: only when the launch policy requested one
+    // (autopilot-wins). A standing manual choice keeps winning, an already
+    // sufficient level is left alone, and everything else is raised to the
+    // ceiling-clamped floor through the same acknowledged-apply path.
+    if (!isEffort(uncertaintyFloorEffort)) return finishUnchanged("insufficient-confidence");
+    if (manualEffortStanding) return finishUnchanged("insufficient-confidence-manual-respected");
+    const ceiling = isEffort(config?.ceiling) ? config.ceiling : DEFAULT_SAVINGS_CONFIG.ceiling;
+    const target = lowerOf(uncertaintyFloorEffort, ceiling);
+    if (isEffort(activeEffort) && lowerOf(activeEffort, target) === target) {
+      return finishUnchanged("insufficient-confidence-floor-met");
+    }
+    return applyAndForward(target, {
+      cause: "uncertainty-floor-acknowledged",
+      uncertaintyFloor: true,
+    });
   }
 
   const plan = resolveExecutionPlan(classification, config);
-  let acknowledgement;
-  try {
-    acknowledgement = await applyEffort(plan.effort);
-  } catch {
-    acknowledgement = null;
-  }
-  if (acknowledgement?.acknowledged !== true || acknowledgement?.effort !== plan.effort) {
-    return finishUnchanged("effort-not-acknowledged");
-  }
-
-  const metadata = appliedMetadata(plan, activeModel, activeEffort, acknowledgement);
-  await forwardOnce(metadata);
-  await onStatus?.(metadata);
-  return metadata;
+  return applyAndForward(plan.effort);
 }

@@ -78,6 +78,41 @@ test("same-level skip follows the pin, acknowledged applications, and auto", () 
   assert.equal(policy.shouldSkipApplication("xhigh"), false);
 });
 
+test("autopilot-wins mirrors manual choices as a standing session level", () => {
+  const { coordinator, policy } = setup({ autopilotWins: true });
+  policy.handleUserEffort("low");
+  let session = coordinator.sessions.get(SESSION);
+  assert.equal(session.activeEffort, "low");
+  assert.equal(session.manualEffortStanding, true);
+  assert.equal(session.explicitUserEffort, false);
+
+  policy.handleUserEffort("auto");
+  session = coordinator.sessions.get(SESSION);
+  assert.equal(session.activeEffort, null);
+  assert.equal(session.manualEffortStanding, false);
+  assert.equal(session.explicitUserEffort, false);
+});
+
+test("session start seeds the known level; only a launch --effort flag stands", () => {
+  for (const [launchEffort, expectedStanding] of [
+    ["max", true],
+    [null, false],
+  ]) {
+    const coordinator = new HybridBrokerCoordinator();
+    coordinator.registerSession({ sessionId: SESSION, model: MODEL });
+    const policy = new SessionEffortPolicy({
+      coordinator,
+      autopilotWins: true,
+      initialEffort: launchEffort ?? "medium",
+    });
+    policy.handleSessionStart(SESSION, launchEffort);
+    const session = coordinator.sessions.get(SESSION);
+    assert.equal(session.activeEffort, launchEffort ?? "medium");
+    assert.equal(session.manualEffortStanding, expectedStanding);
+    assert.equal(session.explicitUserEffort, false);
+  }
+});
+
 test("events before SessionStart are ignored instead of touching unknown sessions", () => {
   const coordinator = new HybridBrokerCoordinator();
   const policy = new SessionEffortPolicy({ coordinator, initialEffort: null });

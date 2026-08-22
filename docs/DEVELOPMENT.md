@@ -32,7 +32,7 @@ npm test
 npm run broker:poc:test
 ```
 
-The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, and internal benchmark regressions.
+The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, and internal benchmark regressions.
 
 Plugin validation is optional historical scaffolding and does not prove broker behavior:
 

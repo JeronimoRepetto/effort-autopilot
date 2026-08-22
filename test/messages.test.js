@@ -25,9 +25,19 @@ test("both catalogs keep the machine-readable cause codes untranslated", () => {
   for (const prompt of ["fix the bug", "arregla el código por favor"]) {
     const messages = brokerMessages(prompt);
     assert.match(messages.unchanged("insufficient-confidence"), /\(insufficient-confidence\)\.$/);
+    assert.match(
+      messages.unchanged("insufficient-confidence-manual-respected"),
+      /\(insufficient-confidence-manual-respected\)\.$/,
+    );
     assert.match(messages.explicitUserEffort, /\(explicit-user-effort\)\.$/);
     assert.match(messages.applied("xhigh", "claude-opus-5"), /xhigh/);
     assert.match(messages.applied("xhigh", "claude-opus-5"), /claude-opus-5/);
+    assert.match(
+      messages.appliedUncertaintyFloor("high", "claude-opus-5"),
+      /\(uncertainty-floor-acknowledged\)\.$/,
+    );
+    assert.match(messages.appliedUncertaintyFloor("high", "claude-opus-5"), /high/);
+    assert.match(messages.appliedUncertaintyFloor("high", "claude-opus-5"), /claude-opus-5/);
     assert.equal(typeof messages.applying, "string");
     assert.equal(typeof messages.busy, "string");
   }

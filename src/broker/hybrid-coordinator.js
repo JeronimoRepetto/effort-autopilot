@@ -12,7 +12,10 @@ function replaySystemMessage(messages, metadata, rawModel = null) {
     // Every non-max application persists the CLI's saved default effort — an
     // upstream side effect the broker cannot scope, so it is disclosed.
     const persistNote = metadata.savedDefaultSideEffect ? messages.appliedPersistNote : "";
-    return `${messages.applied(metadata.appliedEffort, metadata.model)}${persistNote}`;
+    const applied = metadata.uncertaintyFloor
+      ? messages.appliedUncertaintyFloor(metadata.appliedEffort, metadata.model)
+      : messages.applied(metadata.appliedEffort, metadata.model);
+    return `${applied}${persistNote}`;
   }
   const cause = metadata?.cause ?? "unknown";
   // Naming the unsupported model id (never prompt content) lets the user see
@@ -43,6 +46,7 @@ export class HybridBrokerCoordinator {
       cwd,
       explicitUserEffort: false,
       activeEffort: null,
+      manualEffortStanding: false,
     });
     return Object.freeze({ registered: true, exactModel: exactProfile?.id ?? null });
   }
@@ -52,6 +56,7 @@ export class HybridBrokerCoordinator {
     if (!session) return false;
     session.explicitUserEffort = true;
     session.activeEffort = effort;
+    session.manualEffortStanding = true;
     return true;
   }
 
@@ -60,6 +65,18 @@ export class HybridBrokerCoordinator {
     if (!session) return false;
     session.explicitUserEffort = false;
     session.activeEffort = null;
+    session.manualEffortStanding = false;
+    return true;
+  }
+
+  // Tracks the session's known level without latching explicit-user
+  // precedence: under autopilot-wins a manual /effort merely "stands" so an
+  // uncertain classification respects it instead of applying the floor.
+  noteSessionEffort(sessionId, effort, { manualStanding = false } = {}) {
+    const session = this.sessions.get(sessionId);
+    if (!session) return false;
+    session.activeEffort = effort ?? null;
+    session.manualEffortStanding = Boolean(manualStanding);
     return true;
   }
 
@@ -144,6 +161,7 @@ export class HybridBrokerCoordinator {
       onStatus,
       classificationTimeoutMs,
       minimumConfidence,
+      uncertaintyFloorEffort,
     } = {},
   ) {
     const ticket = this.pending.get(ticketId);
@@ -153,10 +171,11 @@ export class HybridBrokerCoordinator {
       modelReliable: false,
       explicitUserEffort: false,
       activeEffort: null,
+      manualEffortStanding: false,
     };
     let armed = null;
     try {
-      return await brokerTurn({
+      const result = await brokerTurn({
         prompt: ticket.prompt,
         activeModel: session.modelReliable ? session.model : null,
         activeEffort: session.activeEffort,
@@ -168,6 +187,8 @@ export class HybridBrokerCoordinator {
         applyEffort,
         classificationTimeoutMs,
         minimumConfidence,
+        uncertaintyFloorEffort,
+        manualEffortStanding: session.manualEffortStanding === true,
         forwardPrompt: async (prompt, metadata) => {
           armed = this.authorizations.arm(ticket.sessionId, prompt, {
             systemMessage: replaySystemMessage(
@@ -185,6 +206,16 @@ export class HybridBrokerCoordinator {
         },
         onStatus,
       });
+      if (result?.outcome === "applied") {
+        // Keep the session's known level fresh: an applied automatic turn
+        // overwrites (and un-stands) any previously noted manual choice.
+        const live = this.sessions.get(ticket.sessionId);
+        if (live) {
+          live.activeEffort = result.appliedEffort;
+          live.manualEffortStanding = false;
+        }
+      }
+      return result;
     } finally {
       ticket.prompt = "";
       this.pending.delete(ticketId);

@@ -258,6 +258,68 @@ test("cancel and reinjection crash leave no replay authorization", async () => {
   assert.equal(coordinator.authorizations.size, 0);
 });
 
+test("autopilot-wins floors an uncertain task at high and replays a distinct status", async () => {
+  const coordinator = registeredCoordinator();
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  const applied = [];
+  const result = await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification("low", 0.4),
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+    applyEffort: async (effort) => {
+      applied.push(effort);
+      return { acknowledged: true, effort };
+    },
+    reinjectPrompt: async () => {},
+  });
+  assert.equal(result.outcome, "applied");
+  assert.equal(result.cause, "uncertainty-floor-acknowledged");
+  assert.deepEqual(applied, ["high"]);
+  const replay = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(replay.action, "allow");
+  assert.match(replay.systemMessage, /se fijó como mínimo en high para claude-sonnet-5/);
+  assert.match(replay.systemMessage, /\(uncertainty-floor-acknowledged\)/);
+  assert.doesNotMatch(replay.systemMessage, /Añade/);
+});
+
+test("a standing manual level survives an uncertain turn", async () => {
+  const coordinator = registeredCoordinator();
+  coordinator.noteSessionEffort(SESSION, "low", { manualStanding: true });
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  // A noted level never latches explicit precedence, so the prompt still routes.
+  assert.equal(first.action, "block");
+  let effortCalls = 0;
+  const result = await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification("low", 0.4),
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+    applyEffort: async (effort) => {
+      effortCalls += 1;
+      return { acknowledged: true, effort };
+    },
+    reinjectPrompt: async () => {},
+  });
+  assert.equal(effortCalls, 0);
+  assert.equal(result.outcome, "unchanged");
+  assert.equal(result.cause, "insufficient-confidence-manual-respected");
+});
+
+test("an applied turn refreshes the session's active effort and clears manual standing", async () => {
+  const coordinator = registeredCoordinator();
+  coordinator.noteSessionEffort(SESSION, "low", { manualStanding: true });
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  await coordinator.routeTicket(first.ticketId, {
+    classifier: () => classification("xhigh", 0.9),
+    config: { ceiling: "max", baselineEffort: "medium" },
+    applyEffort: async (effort) => ({ acknowledged: true, effort }),
+    reinjectPrompt: async () => {},
+  });
+  const session = coordinator.sessions.get(SESSION);
+  assert.equal(session.activeEffort, "xhigh");
+  assert.equal(session.manualEffortStanding, false);
+  assert.equal(session.explicitUserEffort, false);
+});
+
 test("stale replay authorization expires without retaining prompt", () => {
   let now = 100;
   const store = new ReplayAuthorizations({ ttlMs: 10, now: () => now });
