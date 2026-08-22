@@ -16,6 +16,12 @@ No commit or push of behavior changes is permitted without this gate. Doc-only o
 
 History shows why this is a safeguard and not bureaucracy: phases repeatedly outran their documentation until an audit found 10 stale files, including safety claims stated backwards.
 
+## Rule 2 — GitHub Issues are the single work registry
+
+- Every proposal, improvement, or bug is filed as a GitHub issue (what, why, how, acceptance criteria) in `JeronimoRepetto/effort-autopilot` BEFORE any implementation. When the user floats an idea, file it — do not start building it unless they explicitly say so.
+- Work happens on a feature branch referencing the issue; the PR closes it (`Closes #N`).
+- Pending work and future intent live ONLY in issues — never as "TODO/roadmap" notes in `docs/` or `README.md`, which describe exclusively current shipped behavior (see Rule 1).
+
 ## Hard contract (never violate)
 
 - Classification consumes zero model tokens and makes no network call; prompts are never persisted or logged.
