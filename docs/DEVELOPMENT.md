@@ -11,6 +11,8 @@ npm test
 npm run broker:poc:test
 ```
 
+npm is this repo's only package manager (`package-lock.json` is the canonical lockfile). If your shell aliases `npm` to another manager (e.g. a `.bashrc` npm→pnpm supply-chain shim), bypass it here — run the real binary (`& "C:\Program Files\nodejs\npm" test`, or `command npm test` in bash) — otherwise the redirected manager writes its own lockfile/workspace artifacts (now git-ignored) and fails on blocked build scripts instead of running the suite.
+
 `node-pty` 1.1.0 supplies Windows ConPTY and Unix PTY bindings for the broker. It is MIT licensed. The package is marked `private` (unpublished) and exposes exactly one executable: the reversible installer CLI (`effort-autopilot` → `bin/effort-autopilot-cli.js`, see [Installation](INSTALL.md)). No script permanently replaces or renames the real `claude` executable; publication requires the [release checklist](RELEASE_CHECKLIST.md).
 
 ## Internal evaluation tools
