@@ -122,7 +122,7 @@ export async function runInteractiveBroker({
   }
   if (autopilotWins) {
     errorOutput.write(
-      `Effort Autopilot: autopilot-wins policy active (${resolvedPolicy.source}); manual /effort choices are re-evaluated on every prompt.\r\n`,
+      `Effort Autopilot: autopilot-wins policy active (${resolvedPolicy.source}); manual /effort choices are re-evaluated on every prompt, and uncertain tasks are floored at high unless your manual choice is standing.\r\n`,
     );
   }
 
@@ -210,6 +210,7 @@ export async function runInteractiveBroker({
           classifier,
           classificationTimeoutMs,
           config: { ceiling: "max", baselineEffort: "medium" },
+          uncertaintyFloorEffort: autopilotWins ? "high" : null,
           applyEffort: async (effort) => {
             if (policy.shouldSkipApplication(effort)) {
               return { acknowledged: true, effort };

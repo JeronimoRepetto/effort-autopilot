@@ -12,7 +12,11 @@ flowchart LR
     C --> P[Confidence and ceiling policy]
     P --> A[Supported effort application]
     A -->|exact acknowledgement| F[Forward original task once]
-    A -->|unsupported or uncertain| X[Leave effort unchanged]
+    A -->|unsupported| X[Leave effort unchanged]
+    P -->|uncertain under manual-wins, or standing manual choice or sufficient level| X
+    P -->|uncertain under autopilot-wins, no standing manual choice| G[Acknowledged high floor]
+    G --> F
+    G -->|no acknowledgement| X
     X --> F
     F --> O[One-use replay authorization]
     O -->|second hook consumes and allows| R[Real Claude CLI session]
@@ -25,7 +29,7 @@ The broker never changes provider/model and never sends a classification request
 | Layer | State |
 | --- | --- |
 | `src/core` classifier/profiles | Implemented, deterministic bootstrap |
-| `src/broker/turn-controller.js` | Implemented fail-open/exact-once contract |
+| `src/broker/turn-controller.js` | Implemented fail-open/exact-once contract, incl. the autopilot-wins uncertainty floor |
 | `src/broker/hybrid-coordinator.js` | Hook block, ticket routing, one-use replay implemented |
 | `src/broker/ipc.js` / `hook-client.js` | Authenticated local named-pipe hook bridge implemented |
 | `src/broker/pty-session.js` | Windows ConPTY transport and ANSI-normalized acknowledgement implemented |
@@ -58,7 +62,7 @@ sequenceDiagram
         CLI->>H: UserPromptSubmit replay
         H-->>CLI: consume authorization and allow
         CLI->>A: sole model request path
-    else supported and confident
+    else supported and confident, or the autopilot-wins uncertainty floor
         T->>CLI: /effort selected
         CLI-->>T: exact local acknowledgement
         T-->>U: automatic effort applied
@@ -99,7 +103,7 @@ This is supported with `ANTHROPIC_BASE_URL` and a saved claude.ai login, but a r
 
 Exact model is an input, never an output. `SessionStart` supplies the exact id (`claude-opus-5[1m]` in the clean-environment proof). Official docs say that field is optional and does not update after `/model`; the session observer therefore marks the session ambiguous when the `⎿ Set model to …` acknowledgement appears, and every later prompt fails open until a new `SessionStart` supplies an exact model again.
 
-Explicit effort sources outrank automation. Ultracode remains separate orchestration and is suppressed. Unsupported profile/effort mappings are unchanged rather than guessed.
+Explicit effort sources outrank automation under `manual-wins`; under `autopilot-wins` they stand only against the uncertainty floor. Ultracode remains separate orchestration and is suppressed. Unsupported profile/effort mappings are unchanged rather than guessed.
 
 ## Platform notes
 

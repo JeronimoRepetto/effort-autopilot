@@ -24,8 +24,8 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 
 - Classification never calls a model or the network and never stores your prompt.
 - Your exact model and provider are never changed; the prompt is forwarded byte-for-byte, exactly once.
-- **Fail-open always**: unknown model, low confidence, classifier timeout, missing acknowledgement, ambiguous state → your prompt goes through unchanged, with a visible reason code.
-- **You stay in charge**: under the default `manual-wins` policy your own `/effort` choice disables automation (`/effort auto` hands it back); the opt-in `autopilot-wins` policy re-evaluates every prompt instead. Policy is chosen at install, per project (`.effort-autopilot.json`), or per launch (`--autopilot`).
+- **Fail-open on every error**: unknown model, classifier timeout, missing acknowledgement, ambiguous state → your prompt goes through unchanged, with a visible reason code. Low confidence also fails open under `manual-wins`; under `autopilot-wins` it instead floors the session at `high` (see below).
+- **You stay in charge**: under the default `manual-wins` policy your own `/effort` choice disables automation (`/effort auto` hands it back); the opt-in `autopilot-wins` policy re-evaluates every prompt instead, and when classification is uncertain it raises the session to at least `high` — unless your manual `/effort` choice is still standing (then it is respected) or the level already suffices. Policy is chosen at install, per project (`.effort-autopilot.json`), or per launch (`--autopilot`).
 - Reversible by design: the installer shims `claude` on your user PATH with explicit consent and exact backups; `effort-autopilot uninstall` restores everything. Your real Claude binary is never touched.
 
 ### What works right now
@@ -33,13 +33,13 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
 - Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented but unverified.
 - The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
-- 162 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
+- 174 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 
 ### Honest limitations
 
 - Claude Code renders a visible `UserPromptSubmit operation blocked by hook` notice on each intercepted task — the hook API has no quiet block. A [native capability proposal](docs/UPSTREAM_CAPABILITY_PROPOSAL.md) (unsubmitted draft) would remove the artifact entirely.
 - On Claude Code 2.1.238, every `/effort` change except `max` also becomes your saved default (upstream behavior, disclosed on each application). With the autopilot active this is inconsequential; details in [INSTALL.md](docs/INSTALL.md).
-- The current classifier's linguistic patterns cover English and Spanish; other languages safely fail open (unchanged effort) rather than guessing.
+- The current classifier's linguistic patterns cover English and Spanish; other languages classify with low confidence rather than guessing — unchanged effort under `manual-wins`, floored at `high` under `autopilot-wins`.
 - Effort is a behavioral signal, not a token cap — no per-prompt savings guarantee is claimed until measured by calibration.
 
 ## Roadmap
@@ -65,7 +65,7 @@ Two models in cascade, neither trained from scratch: a **frozen, pretrained mult
 git clone https://github.com/JeronimoRepetto/effort-autopilot.git
 cd effort-autopilot
 npm install
-npm test                                   # 162 local tests, no Claude calls
+npm test                                   # 174 local tests, no Claude calls
 node bin/effort-autopilot-cli.js install   # consent-gated, reversible
 # open a NEW terminal, cd into any project, and run: claude
 ```

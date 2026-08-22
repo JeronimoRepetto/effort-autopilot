@@ -31,7 +31,7 @@ Uninstall removes only Effort Autopilot's own PATH entry/profile block; every ot
 ## Precedence policy
 
 - `manual-wins` (default): your own `/effort` choice disables automation for the session; `/effort auto` hands control back.
-- `autopilot-wins`: the broker re-evaluates every prompt, even over manual choices.
+- `autopilot-wins`: the broker re-evaluates every prompt, even over manual choices. When classification is uncertain it floors the session at `high` — unless your manual `/effort` choice (or launch `--effort` flag) is still standing, which is respected, or the current level already suffices.
 
 Resolution order: `--autopilot` launch flag > project `.effort-autopilot.json` > global `config.json` > `manual-wins`.
 
@@ -66,7 +66,7 @@ This downloads a frozen, pretrained multilingual embedding model (~100 MB, ONNX,
 
 ## Known accepted behavior
 
-On Claude Code 2.1.238, every `/effort` change except `max` also saves that level as your global default (upstream behavior; the broker discloses it on each application). With the autopilot active this is inconsequential — effort is re-decided per prompt — but where the broker does not run (opted-out projects, after uninstall) your default will be whatever level was applied last. Reset it any time with `/effort <level>` in a plain Claude session.
+On Claude Code 2.1.238, every `/effort` change except `max` also saves that level as your global default (upstream behavior; the broker discloses it on each application). With the autopilot active this is inconsequential — effort is re-decided per prompt — but where the broker does not run (opted-out projects, after uninstall) your default will be whatever level was applied last; note that under `autopilot-wins` the uncertainty floor makes `high` a common last-applied level. Reset it any time with `/effort <level>` in a plain Claude session.
 
 ## Platform support
 

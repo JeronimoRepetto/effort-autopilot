@@ -134,3 +134,94 @@ test("telemetry never contains prompt content", async () => {
   assert.doesNotMatch(JSON.stringify(result.metadata), /scoped parser fix/i);
   assert.doesNotMatch(JSON.stringify(result.statuses), /scoped parser fix/i);
 });
+
+test("an uncertain classification applies the high floor when one is requested", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "medium",
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+  });
+  assert.equal(result.metadata.outcome, "applied");
+  assert.equal(result.metadata.cause, "uncertainty-floor-acknowledged");
+  assert.equal(result.metadata.appliedEffort, "high");
+  assert.equal(result.metadata.uncertaintyFloor, true);
+  assert.equal(result.applyCalls, 1);
+  assert.deepEqual(result.forwarded, [PROMPT]);
+});
+
+test("a standing manual effort is respected when classification is uncertain", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "medium",
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+    manualEffortStanding: true,
+  });
+  assert.equal(result.metadata.outcome, "unchanged");
+  assert.equal(result.metadata.cause, "insufficient-confidence-manual-respected");
+  assert.equal(result.applyCalls, 0);
+  assert.deepEqual(result.forwarded, [PROMPT]);
+});
+
+test("an already-sufficient effort is left unchanged under the floor", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "xhigh",
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+  });
+  assert.equal(result.metadata.outcome, "unchanged");
+  assert.equal(result.metadata.cause, "insufficient-confidence-floor-met");
+  assert.equal(result.applyCalls, 0);
+  assert.deepEqual(result.forwarded, [PROMPT]);
+});
+
+test("an unknown current effort still gets the floor", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: null,
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+  });
+  assert.equal(result.metadata.outcome, "applied");
+  assert.equal(result.metadata.appliedEffort, "high");
+  assert.equal(result.metadata.uncertaintyFloor, true);
+});
+
+test("the uncertainty floor respects the savings ceiling", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "low",
+    config: { ceiling: "medium", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+  });
+  assert.equal(result.metadata.outcome, "applied");
+  assert.equal(result.metadata.appliedEffort, "medium");
+  assert.equal(result.metadata.uncertaintyFloor, true);
+});
+
+test("an unacknowledged uncertainty floor fails open", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "low",
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+    applyEffort: async () => ({ acknowledged: false }),
+  });
+  assert.equal(result.metadata.outcome, "unchanged");
+  assert.equal(result.metadata.cause, "effort-not-acknowledged");
+  assert.deepEqual(result.forwarded, [PROMPT]);
+  assert.equal(result.statuses.length, 1);
+});
+
+test("floor-applied telemetry never contains prompt content", async () => {
+  const result = await run({
+    classifier: () => confidentClassification("low", 0.4),
+    activeEffort: "low",
+    config: { ceiling: "max", baselineEffort: "medium" },
+    uncertaintyFloorEffort: "high",
+  });
+  assert.doesNotMatch(JSON.stringify(result.metadata), /scoped parser fix/i);
+  assert.doesNotMatch(JSON.stringify(result.statuses), /scoped parser fix/i);
+});

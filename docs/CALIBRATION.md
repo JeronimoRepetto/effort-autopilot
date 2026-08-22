@@ -82,7 +82,7 @@ The encoder cannot decide: its only output is a meaning vector — it has no not
 
 Candidate additional inputs for the head remain: transparent prompt features from the deterministic policy, cheap local project/environment metadata, and a versioned active-model capability profile. Fit per-model parameters or a hierarchical model only after the data supports that complexity. Calibrate confidence on held-out data using a method appropriate to ordinal predictions. Report reliability diagrams and per-boundary error, not only aggregate accuracy.
 
-The runtime chain is already integrated behind the same envelope contract (`src/core/learned-classifier.js`): learned classifier → deterministic classifier on any failure or missing artifact → the broker's fail-open. It activates only when config sets `"ml": true` AND the model cache and a valid trained artifact exist; until calibration ships an artifact, the deterministic classifier runs.
+The runtime chain is already integrated behind the same envelope contract (`src/core/learned-classifier.js`): learned classifier → deterministic classifier on any failure or missing artifact → the broker's confidence gate (fail-open under `manual-wins`; the `high` uncertainty floor under `autopilot-wins`). It activates only when config sets `"ml": true` AND the model cache and a valid trained artifact exist; until calibration ships an artifact, the deterministic classifier runs.
 
 ## Optimization and release criteria
 

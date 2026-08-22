@@ -14,8 +14,8 @@
 | [`src/core/embedding-provider.js`](../src/core/embedding-provider.js) | Optional local multilingual embedding model (ONNX CPU) — the only seam touching `@huggingface/transformers` |
 | [`src/core/learned-classifier.js`](../src/core/learned-classifier.js) | Learned classifier with the classifyEnvelope contract and deterministic fallback chain; installed-artifact loader |
 | [`scripts/train-ordinal-head.mjs`](../scripts/train-ordinal-head.mjs) | CLI trainer (`npm run ml:train`) from JSONL features/prompts to a versioned artifact |
-| [`src/broker/turn-controller.js`](../src/broker/turn-controller.js) | User override precedence, fail-open causes, acknowledgement, exact-once forwarding, prompt-free status |
-| [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, session/model state |
+| [`src/broker/turn-controller.js`](../src/broker/turn-controller.js) | User override precedence, fail-open causes, autopilot-wins uncertainty floor, acknowledgement, exact-once forwarding, prompt-free status |
+| [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, session/model state incl. standing-manual tracking and post-applied level refresh |
 | [`src/broker/replay-authorizations.js`](../src/broker/replay-authorizations.js) | Expiring session-bound prompt-digest authorizations, held only in memory and consumed once |
 | [`src/broker/ipc.js`](../src/broker/ipc.js) | Random authenticated Windows named-pipe/Unix-socket bridge with bounded messages |
 | [`src/broker/hook-client.js`](../src/broker/hook-client.js) | Claude hook JSON adapter and visible no-change fail-open warning |
@@ -25,7 +25,7 @@
 | [`src/broker/settings-merge.js`](../src/broker/settings-merge.js) | Additive hook merge into a user-provided `--settings` document; refuses shapes it cannot combine |
 | [`src/broker/effort-baseline.js`](../src/broker/effort-baseline.js) | Local `effortLevel` read for the `--effort` spawn pin — makes the starting level known for the same-level skip (the pin does not scope persistence) |
 | [`src/broker/session-observer.js`](../src/broker/session-observer.js) | Terminal acknowledgement watcher for manual `/effort` precedence and `/model` ambiguity marking |
-| [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy and known-active-level tracking for the same-level skip |
+| [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy, known-active-level tracking for the same-level skip, and standing-manual-choice mirroring for the uncertainty floor |
 | [`src/broker/messages.js`](../src/broker/messages.js) | Prompt-language–localized status messages (English default, Spanish on clear evidence); cause codes stay untranslated |
 | [`src/broker/install-paths.js`](../src/broker/install-paths.js) | Canonical per-platform install root, shim, config, and backup locations |
 | [`src/broker/project-config.js`](../src/broker/project-config.js) | Per-project `.effort-autopilot.json`, global install config, and the policy resolution chain |
@@ -34,7 +34,7 @@
 | [`src/installer/shim.js`](../src/installer/shim.js) | Windows `.cmd` and POSIX shell shim contents |
 | [`src/installer/installer.js`](../src/installer/installer.js) | Consent-gated install/uninstall/status/policy with raw-registry PATH handling and backups |
 | [`bin/effort-autopilot-cli.js`](../bin/effort-autopilot-cli.js) | Public installer CLI entrypoint (install, uninstall, status, policy, ml-setup) |
-| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing, observer wiring, passthrough fallback, crash cleanup |
+| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing (chooses the autopilot-wins `high` uncertainty floor), observer wiring, passthrough fallback, crash cleanup |
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |
 | [`scripts/verify-hybrid-broker-no-inference.mjs`](../scripts/verify-hybrid-broker-no-inference.mjs) | Installed-CLI diagnostic with an independent always-block safety hook |
@@ -69,14 +69,14 @@
 
 | Path | Responsibility |
 | --- | --- |
-| [`test/broker-turn.test.js`](../test/broker-turn.test.js) | Applied/unchanged outcomes, every fail-open cause, override precedence, timeout, exact-once, privacy |
+| [`test/broker-turn.test.js`](../test/broker-turn.test.js) | Applied/unchanged outcomes, every fail-open cause, the uncertainty floor (applied, respected, met, clamped, unacknowledged), override precedence, timeout, exact-once, privacy |
 | [`test/broker-pty.test.js`](../test/broker-pty.test.js) | Synthetic ConPTY command acknowledgement and forward ordering |
-| [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens |
+| [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens, floor routing and standing-manual state |
 | [`test/broker-ipc.test.js`](../test/broker-ipc.test.js) | Token-authenticated local IPC, fail-open, prompt-free hook status |
 | [`test/broker-input-relay.test.js`](../test/broker-input-relay.test.js) | Routing pause with exact permission/paste/Unicode/cancellation byte preservation |
 | [`test/broker-launch.test.js`](../test/broker-launch.test.js) | Launch-argument facts, additive `--settings` hook merge, and session effort baseline resolution |
 | [`test/pty-effort-dialog.test.js`](../test/pty-effort-dialog.test.js) | Escalation-confirmation dialog handling and modal dismissal before fail-open reinjection |
-| [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip |
+| [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip, standing-manual mirroring |
 | [`test/messages.test.js`](../test/messages.test.js) | Language detection defaults and untranslated cause codes in both catalogs |
 | [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain |
 | [`test/ordinal-head.test.js`](../test/ordinal-head.test.js) | Artifact validation, probability sanity, tier monotonicity, synthetic training convergence and determinism |

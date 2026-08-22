@@ -34,7 +34,7 @@ Control: there is no credential API or provider option. The hook/ConPTY broker u
 
 ### Unexpected extra billable work
 
-Control: classification uses zero model tokens. The broker controller forwards once and has no retry; explicit user effort wins and ultracode is never activated. Internal pilot limits remain explicit. Residual risk: stock Claude Code can perform normal multiple agentic requests and its own documented capability retries.
+Control: classification uses zero model tokens. The broker controller forwards once and has no retry; explicit user effort wins under `manual-wins` and ultracode is never activated. Internal pilot limits remain explicit. Disclosed deliberate cost increase: under the opt-in `autopilot-wins` policy, every uncertain classification (including most prompts in languages other than English or Spanish) raises the session to `high` unless a standing manual choice or an already-sufficient level applies — a user-chosen trade of compute for answer quality ([product contract](PRODUCT.md), issue #2). Residual risk: stock Claude Code can perform normal multiple agentic requests and its own documented capability retries.
 
 ### Persistence
 

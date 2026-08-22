@@ -10,13 +10,19 @@ This is correct fail-open behavior when the cause is one of:
 
 - `explicit-user-effort`
 - `unsupported-or-ambiguous-model`
-- `insufficient-confidence`
+- `insufficient-confidence` (manual-wins)
+- `insufficient-confidence-manual-respected` (autopilot-wins: your standing manual choice won)
+- `insufficient-confidence-floor-met` (autopilot-wins: the level already meets the `high` floor)
 - `classification-failed`
 - `classification-timeout`
 - `ambiguous-terminal-state`
 - `effort-not-acknowledged`
 
 The task is forwarded once at Claude's current/default/user-selected effort and status must say `outcome=unchanged`. It must not retry or route through the legacy launcher.
+
+## The broker raised my effort to high and I didn't ask
+
+That is the `autopilot-wins` uncertainty floor, not an error: when classification is uncertain and no manual `/effort` choice is standing and the level is below `high`, the broker applies `high` and reports `applied` with `uncertainty-floor-acknowledged`. To keep your own level, type `/effort <level>` (it stands until an applied automatic turn or `/effort auto`), or switch back to the default policy with `effort-autopilot policy manual-wins`.
 
 ## ConPTY test fails on Windows
 

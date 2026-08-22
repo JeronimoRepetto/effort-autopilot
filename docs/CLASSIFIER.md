@@ -68,7 +68,7 @@ Heuristic confidence is:
 - 0.05 when no model profile is supplied
 ```
 
-The result is clamped to `0.20..0.96` and rounded to two decimals. If confidence is below `0.55` and there is no explicit intent, the classifier escalates one tier. The broker independently treats insufficient confidence as fail-open/no-change, and its user ceiling remains authoritative when automation is allowed.
+The result is clamped to `0.20..0.96` and rounded to two decimals. If confidence is below `0.55` and there is no explicit intent, the classifier escalates one tier. The broker independently gates on insufficient confidence: under `manual-wins` it is pure fail-open/no-change, while under `autopilot-wins` it floors the session at `high` unless a manual choice is standing or the level already suffices (see the [product contract](PRODUCT.md)). The broker's user ceiling remains authoritative when automation is allowed.
 
 The confidence number is not statistically calibrated. [Calibration](CALIBRATION.md) describes held-out calibration of a future learned model.
 
