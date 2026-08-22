@@ -1,5 +1,9 @@
 node_modules/
 coverage/
+# npm is this repo's only package manager; a local npm->pnpm shim can
+# regenerate these pnpm artifacts and they must never be committed.
+pnpm-lock.yaml
+pnpm-workspace.yaml
 *.log
 .DS_Store
 Thumbs.db
