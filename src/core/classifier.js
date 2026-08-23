@@ -1,10 +1,11 @@
+import { TIERS, nextTier, shiftEffort } from "./effort-ladder.js";
+import { mapTierToNativeEffort, resolveHostEffortVocabulary } from "./host-effort-vocabulary.js";
 import {
   CONFIDENCE_POLICY,
   ENVIRONMENT_PRIORS,
   FEATURE_RULES,
   LENGTH_BANDS,
   THRESHOLDS,
-  TIERS,
   SYSTEM_FEATURES,
   ULTRACODE_GATE,
   UNCERTAINTY_RULES,
@@ -35,18 +36,6 @@ export function tierForScore(score) {
 
 function isBoundaryScore(score) {
   return THRESHOLDS.slice(1).some(({ min }) => score === min || score === min - 1);
-}
-
-function nextTier(tier) {
-  return TIERS[Math.min(TIERS.indexOf(tier) + 1, TIERS.length - 1)];
-}
-
-const EFFORT_TIERS = Object.freeze(["low", "medium", "high", "xhigh", "max"]);
-
-function shiftEffortTier(tier, offset) {
-  if (!EFFORT_TIERS.includes(tier) || offset === 0) return tier;
-  const index = EFFORT_TIERS.indexOf(tier);
-  return EFFORT_TIERS[clamp(index + offset, 0, EFFORT_TIERS.length - 1)];
 }
 
 function normalizeContext(context) {
@@ -156,22 +145,23 @@ function addEnvironmentSignals(environment, signals) {
   return used;
 }
 
-function resolveSupportedEffort(tier, modelProfile) {
-  const requestedEffort = tier === "ultracode" ? "xhigh" : tier;
+function resolveSupportedEffort(tier, modelProfile, vocabulary = resolveHostEffortVocabulary()) {
+  const native = vocabulary.nativeLevels;
+  const requestedEffort = mapTierToNativeEffort(tier, vocabulary);
   const supported = Array.isArray(modelProfile?.supportedEfforts)
-    ? modelProfile.supportedEfforts.filter((value) => EFFORT_TIERS.includes(value))
+    ? modelProfile.supportedEfforts.filter((value) => native.includes(value))
     : null;
-  const cap = EFFORT_TIERS.includes(modelProfile?.effortCap) ? modelProfile.effortCap : null;
+  const cap = native.includes(modelProfile?.effortCap) ? modelProfile.effortCap : null;
   let resolved = requestedEffort;
-  if (cap && EFFORT_TIERS.indexOf(resolved) > EFFORT_TIERS.indexOf(cap)) {
+  if (cap && native.indexOf(resolved) > native.indexOf(cap)) {
     resolved = cap;
   }
   if (supported?.length && !supported.includes(resolved)) {
-    const requestedIndex = EFFORT_TIERS.indexOf(resolved);
+    const requestedIndex = native.indexOf(resolved);
     resolved =
       [...supported]
-        .sort((a, b) => EFFORT_TIERS.indexOf(b) - EFFORT_TIERS.indexOf(a))
-        .find((value) => EFFORT_TIERS.indexOf(value) <= requestedIndex) ?? supported[0];
+        .sort((a, b) => native.indexOf(b) - native.indexOf(a))
+        .find((value) => native.indexOf(value) <= requestedIndex) ?? supported[0];
   }
   const ultracodeAvailable = modelProfile?.ultracodeAvailable === true;
   return {
@@ -272,7 +262,7 @@ export function classifyPrompt(prompt, context) {
   const rawOffset = Number.isInteger(modelProfile?.effortOffset) ? modelProfile.effortOffset : 0;
   const modelRelativeOffset = clamp(rawOffset, -2, 2);
   if (!explicitIntent) {
-    tier = shiftEffortTier(tier, modelRelativeOffset);
+    tier = shiftEffort(tier, modelRelativeOffset);
   }
 
   const reasons = [

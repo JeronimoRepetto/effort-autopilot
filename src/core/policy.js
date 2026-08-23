@@ -9,7 +9,9 @@
  * baseline behind the stable classifier contract.
  */
 
-export const TIERS = Object.freeze(["low", "medium", "high", "xhigh", "max", "ultracode"]);
+// The canonical ladder definition lives in effort-ladder.js (issue #8); the
+// historical re-export is kept because TIERS is part of this module's contract.
+export { TIERS } from "./effort-ladder.js";
 
 export const THRESHOLDS = Object.freeze([
   { min: Number.NEGATIVE_INFINITY, tier: "low" },

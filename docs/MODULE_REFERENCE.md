@@ -4,6 +4,9 @@
 
 | Path | Responsibility |
 | --- | --- |
+| [`src/core/effort-ladder.js`](../src/core/effort-ladder.js) | Canonical effort ladder (single source of truth): ordered levels, orchestration tiers, ordering/validation helpers, derived user-facing enumeration |
+| [`src/core/host-effort-vocabulary.js`](../src/core/host-effort-vocabulary.js) | Per-host effort vocabulary as data: native levels plus tier→native mapping (Claude Code only today) |
+| [`src/core/execution-plan.js`](../src/core/execution-plan.js) | Classifier result → host-adapter-ready pre-call plan with ceiling clamp and ultracode suppression |
 | [`src/core/policy.js`](../src/core/policy.js) | Hand-authored deterministic signals, weights, thresholds, uncertainty, and ultracode gate |
 | [`src/core/classifier.js`](../src/core/classifier.js) | Host-neutral scoring, confidence, model/environment adjustment, explanations |
 | [`src/core/model-profiles.js`](../src/core/model-profiles.js) | Exact versioned model capabilities and bootstrap offsets |
@@ -38,6 +41,7 @@
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |
 | [`scripts/verify-hybrid-broker-no-inference.mjs`](../scripts/verify-hybrid-broker-no-inference.mjs) | Installed-CLI diagnostic with an independent always-block safety hook |
+| [`bin/internal-zero-inference-guard-hook.js`](../bin/internal-zero-inference-guard-hook.js) | Standalone always-block guard hook for any experiment against the installed CLI (zero billable prompts) |
 | [`scripts/start-isolated-test.ps1`](../scripts/start-isolated-test.ps1) | Opens a visible PowerShell with a reversible session-only `claude` shim |
 | [`scripts/run-tests.mjs`](../scripts/run-tests.mjs) | Cross-platform explicit discovery of `*.test.js`, excluding interactive fixtures |
 | [`src/gateway/request-transform.js`](../src/gateway/request-transform.js) | Synthetic Anthropic Messages effort-only transform and stream pass-through proof |
@@ -46,15 +50,18 @@
 
 | Path | Responsibility |
 | --- | --- |
-| [`src/launcher/plan.js`](../src/launcher/plan.js) | Shared ceiling planning retained by benchmarks and mocks |
-| [`src/launcher/launch.js`](../src/launcher/launch.js) | Internal exactly-one runner invocation |
+| [`src/launcher/launch.js`](../src/launcher/launch.js) | Internal exactly-one runner invocation (planning itself lives in `src/core/execution-plan.js`) |
 | [`src/adapters/claude-cli/runner.js`](../src/adapters/claude-cli/runner.js) | Internal `--print` benchmark transport |
 | [`src/cli/main.js`](../src/cli/main.js) | Legacy internal launcher entry logic; not exported as npm bin |
+| [`src/cli/args.js`](../src/cli/args.js) | Legacy launcher argument parsing and help text; validation lists derive from the canonical ladder |
 | [`src/cli/pilot-main.js`](../src/cli/pilot-main.js) | Internal pilot runner CLI |
 | [`bin/effort-autopilot.js`](../bin/effort-autopilot.js) | Internal direct script retained for tests/calibration only |
 | [`bin/effort-autopilot-pilot.js`](../bin/effort-autopilot-pilot.js) | Internal pilot script, not packaged as a bin |
+| [`src/evaluation/pilot.js`](../src/evaluation/pilot.js) | Benchmark pilot harness: manifest/task-prompt loading, workspace preparation, protected verifier execution, checkpointing |
 | [`src/evaluation/calibration.js`](../src/evaluation/calibration.js) | Adaptive minimum-sufficient-effort search, resumable checkpoints, dataset export, honest baseline summary |
 | [`scripts/calibrate.mjs`](../scripts/calibrate.mjs) | Calibration CLI (`npm run calibrate`); live mode double-gated behind `--live --confirm-subscription-use` |
+| [`scripts/prepare-live-pilot.mjs`](../scripts/prepare-live-pilot.mjs) | Non-billable fixture preparation for the live pilot (`npm run pilot:prepare-live`) |
+| [`scripts/recover-live-pilot.mjs`](../scripts/recover-live-pilot.mjs) | Verifier-backed recovery of a stopped live-pilot task without a new Claude call (`npm run pilot:recover-live`) |
 | [`evaluation/`](../evaluation) | Public benchmark references/manifests, no private prompts |
 
 ## Packaging and experimental plugin
@@ -86,4 +93,6 @@
 | [`test/gateway-transform.test.js`](../test/gateway-transform.test.js) | Effort-only body mutation, exact model, failure modes, stream bytes, privacy |
 | [`test/classifier.test.js`](../test/classifier.test.js) | Six tiers, boundaries, multilingual and model-aware regression |
 | [`test/documentation.test.js`](../test/documentation.test.js) | Link/index/product-boundary synchronization |
+| [`test/effort-ladder.test.js`](../test/effort-ladder.test.js) | Canonical ladder ordering/helpers, derived user-facing enumeration, host vocabulary mapping |
+| [`test/packaging.test.js`](../test/packaging.test.js) | Tripwires: private/unpublished surface, npmignore exclusions, shipped imports resolve inside the tarball, single ladder definition, plugin/package version sync |
 | Other `test/*.test.js` | Internal evaluation, packaging scaffolding, and regression coverage |

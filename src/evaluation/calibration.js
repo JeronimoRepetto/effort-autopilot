@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { ClaudeRateLimitError } from "../adapters/claude-cli/runner.js";
+import { EFFORT_LEVELS } from "../core/effort-ladder.js";
 import { launchTask } from "../launcher/launch.js";
 import { loadTaskPrompt, prepareWorkspace, runVerifier, runVerifierProcess } from "./pilot.js";
 
@@ -22,7 +23,7 @@ import { loadTaskPrompt, prepareWorkspace, runVerifier, runVerifierProcess } fro
  * expected to live under ignored directories.
  */
 
-export const CALIBRATION_EFFORTS = Object.freeze(["low", "medium", "high", "xhigh", "max"]);
+export const CALIBRATION_EFFORTS = EFFORT_LEVELS;
 
 async function atomicJson(filePath, value) {
   await mkdir(path.dirname(filePath), { recursive: true });

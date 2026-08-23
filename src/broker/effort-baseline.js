@@ -3,6 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 
+import { EFFORT_LEVELS } from "../core/effort-ladder.js";
+
 /**
  * Resolves the effort level the new session will start at, reading only the
  * `effortLevel` key from the same local settings files Claude itself consults
@@ -17,7 +19,7 @@ import process from "node:process";
  * unsupported application.
  */
 
-const EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max", "auto"]);
+const ACCEPTED_LEVELS = new Set([...EFFORT_LEVELS, "auto"]);
 
 function defaultReadFile(file) {
   return readFileSync(file, "utf8");
@@ -43,7 +45,7 @@ export function resolveSessionEffortBaseline({
       continue;
     }
     const effort = parsed?.effortLevel;
-    if (typeof effort === "string" && EFFORT_LEVELS.has(effort)) {
+    if (typeof effort === "string" && ACCEPTED_LEVELS.has(effort)) {
       return Object.freeze({ effort, source: candidate.source });
     }
   }

@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 
-const EFFORTS = new Set(["low", "medium", "high", "xhigh", "max"]);
+import { EFFORT_LEVELS } from "../../core/effort-ladder.js";
+
+const EFFORTS = new Set(EFFORT_LEVELS);
 const PERMISSION_MODES = new Set(["manual", "acceptEdits", "plan", "dontAsk"]);
 const MAX_OUTPUT_BYTES = 32 * 1024 * 1024;
 

@@ -1,20 +1,9 @@
-const EFFORTS = Object.freeze(["low", "medium", "high", "xhigh", "max"]);
+import { isEffort, lowerOf } from "./effort-ladder.js";
 
 export const DEFAULT_SAVINGS_CONFIG = Object.freeze({
   ceiling: "medium",
   baselineEffort: "medium",
 });
-
-export function isEffort(value) {
-  return EFFORTS.includes(value);
-}
-
-export function lowerOf(left, right) {
-  if (!isEffort(left) || !isEffort(right)) {
-    throw new TypeError("effort must be low, medium, high, xhigh, or max");
-  }
-  return EFFORTS[Math.min(EFFORTS.indexOf(left), EFFORTS.indexOf(right))];
-}
 
 /**
  * Turn a classifier result into a host-adapter-ready pre-call plan.

@@ -26,14 +26,14 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 - Your exact model and provider are never changed; the prompt is forwarded byte-for-byte, exactly once.
 - **Fail-open on every error**: unknown model, classifier timeout, missing acknowledgement, ambiguous state → your prompt goes through unchanged, with a visible reason code. Low confidence also fails open under `manual-wins`; under `autopilot-wins` it instead floors the session at `high` (see below).
 - **You stay in charge**: under the default `manual-wins` policy your own `/effort` choice disables automation (`/effort auto` hands it back); the opt-in `autopilot-wins` policy re-evaluates every prompt instead, and when classification is uncertain it raises the session to at least `high` — unless your manual `/effort` choice is still standing (then it is respected) or the level already suffices. Policy is chosen at install, per project (`.effort-autopilot.json`), or per launch (`--autopilot`).
-- Reversible by design: the installer shims `claude` on your user PATH with explicit consent and exact backups; `effort-autopilot uninstall` restores everything. Your real Claude binary is never touched.
+- Reversible by design: the installer shims `claude` on your user PATH with explicit consent and exact backups; `node bin/effort-autopilot-cli.js uninstall` restores everything. Your real Claude binary is never touched.
 
 ### What works right now
 
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
 - Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented but unverified.
 - The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
-- 174 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
+- 185 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 
 ### Honest limitations
 
@@ -65,7 +65,7 @@ Two models in cascade, neither trained from scratch: a **frozen, pretrained mult
 git clone https://github.com/JeronimoRepetto/effort-autopilot.git
 cd effort-autopilot
 npm install
-npm test                                   # 174 local tests, no Claude calls
+npm test                                   # 185 local tests, no Claude calls
 node bin/effort-autopilot-cli.js install   # consent-gated, reversible
 # open a NEW terminal, cd into any project, and run: claude
 ```

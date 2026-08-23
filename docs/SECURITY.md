@@ -50,7 +50,7 @@ Control: prompt input is limited to 1 MiB, model profiles to 128 KiB, and combin
 
 ## Local ML model
 
-The optional learned classifier downloads a pretrained multilingual embedding model once, during explicit `effort-autopilot install --with-ml` / `ml-setup`, into the install root. Classification loads it with `localFilesOnly` — no network is ever touched while classifying, and prompts are embedded in-process and discarded. The trained ordinal-head artifact is a small local JSON validated before use; an invalid or missing artifact silently keeps the deterministic classifier. The only module importing the optional dependency is `src/core/embedding-provider.js`, enforced by test.
+The optional learned classifier downloads a pretrained multilingual embedding model once, during explicit `install --with-ml` / `ml-setup` runs of the installer CLI (`node bin/effort-autopilot-cli.js`), into the install root. Classification loads it with `localFilesOnly` — no network is ever touched while classifying, and prompts are embedded in-process and discarded. The trained ordinal-head artifact is a small local JSON validated before use; an invalid or missing artifact silently keeps the deterministic classifier. The only module importing the optional dependency is `src/core/embedding-provider.js`, enforced by test.
 
 ## Telemetry policy
 

@@ -34,7 +34,7 @@ npm test
 npm run broker:poc:test
 ```
 
-The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, and internal benchmark regressions.
+The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), and internal benchmark regressions.
 
 Plugin validation is optional historical scaffolding and does not prove broker behavior:
 
@@ -61,7 +61,7 @@ After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` 
 
 1. Keep host-neutral logic under `src/core`.
 2. Keep product broker logic under `src/broker`, the guarded proof under `scripts`, and gateway research under `src/gateway`.
-3. Keep `src/launcher`, `src/adapters/claude-cli`, legacy `src/cli`, and pilot bins internal-only.
+3. Keep `src/launcher`, `src/adapters/claude-cli`, legacy `src/cli`, and pilot bins internal-only. Packaged code (`src/broker`, `src/core`, `src/installer`, the shipped `bin/` entrypoints) must never import from those internal directories — they are excluded from the npm tarball, and `test/packaging.test.js` enforces that every shipped import resolves inside it (regression guard for issue #13).
 4. The only permitted persistent install surface is the reversible installer (`bin/effort-autopilot-cli.js` + `src/installer/`): explicit consent, exact backups, surgical uninstall, never overwriting or renaming the real `claude`. Never add a Claude settings mutation, gateway listener, or unreviewed live proof.
 5. Preserve prompt-free metadata and add failure/privacy/exact-once tests.
 6. Update the feasibility audit and module map, run tests, and inspect git status.
