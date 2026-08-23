@@ -24,9 +24,13 @@ Control: every broker process creates a per-process local named pipe/socket (sho
 
 Replay authorization is in memory, expires after five seconds, binds session ID to a SHA-256 prompt digest, and is consumed once. The digest is never logged or persisted. Repeating identical text later creates a new normal routing ticket.
 
+### node-pty spawn-helper preflight
+
+At launch the broker may perform narrowly scoped permission writes inside its own dependency tree: every node-pty `spawn-helper` binary found without execute permission (some package managers drop the bit during extraction; in practice at most one exists) is restored by mirroring the file's read bits into execute bits (0644 → 0755, the mode upstream ships), and the repaired paths are reported visibly. No other file is touched, contents are never modified, and a failed repair only produces a notice — the launch then degrades fail-open. Under pnpm the file is hard-linked from the shared content-addressable store, so the repair also fixes the store copy (same inode); this is disclosed here because it reaches beyond the project directory.
+
 ### Process-list or shell injection disclosure
 
-Control: the PTY adapter spawns by executable plus argument array, and terminal input is relayed as bytes without invoking a shell. The routing-window relay pauses rather than interpreting permission, editor, paste, Unicode, or cancellation input. Internal benchmark/verifier processes also use argument arrays with `shell: false`. The isolated test broker is internal, has no npm binary mapping, and shadows `claude` only in a newly opened PowerShell session.
+Control: the PTY adapter spawns by executable plus argument array, and terminal input is relayed as bytes without invoking a shell. One disclosed exception: the last-resort directly-attached degradation (`pty-spawn-failed`) on Windows must launch a `.cmd`/`.bat` Claude through `cmd.exe /d /s /c` with a broker-built quoted command line (Node itself refuses to spawn those files without a shell). The arguments are the user's own argv — the same trust domain — and quoting doubles embedded quotes; a residual cmd limitation is that `%VAR%` sequences inside arguments are still expanded by cmd. The routing-window relay pauses rather than interpreting permission, editor, paste, Unicode, or cancellation input. Internal benchmark/verifier processes also use argument arrays with `shell: false`. The isolated test broker is internal, has no npm binary mapping, and shadows `claude` only in a newly opened PowerShell session.
 
 ### Credential theft or provider substitution
 

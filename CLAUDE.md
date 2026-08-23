@@ -34,7 +34,7 @@ History shows why this is a safeguard and not bureaucracy: phases repeatedly out
 
 - NEVER invoke the installed `claude` for experiments without the zero-inference guard hook (`bin/internal-zero-inference-guard-hook.js`) in temporary `--settings`. Bare `claude <words>` submits a billable prompt (`claude config get` no longer exists).
 - Anything live/billable (pilot, calibration `--live`) requires the user's explicit GO and the double flag `--live --confirm-subscription-use`.
-- npm publication, PATH mutations outside the installer, and settings writes require explicit user authorization.
+- npm publication, PATH mutations outside the installer, and settings writes require explicit user authorization. Accepted, disclosed exception (issues #25/#26): the broker's launch preflight may chmod node-pty's own `spawn-helper` inside the dependency tree (documented in `docs/SECURITY.md`; under pnpm this reaches the hard-linked store copy).
 - File-verified on 2.1.238: `/effort low|medium|high|xhigh` persists the user's saved default on EVERY path; only `/effort max` is session-only. The `--effort` spawn pin does not scope anything.
 
 ## Verify before claiming done

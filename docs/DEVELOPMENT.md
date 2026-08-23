@@ -11,7 +11,7 @@ npm test
 npm run broker:poc:test
 ```
 
-npm's `package-lock.json` is this repo's canonical lockfile — do not commit other managers' lockfiles or workspace artifacts (they are git-ignored). Running the checkout with pnpm works (verified 2026-08-23: the full suite runs under pnpm v11), with one known macOS caveat — pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper` (`posix_spawnp failed`; one-line fix in [Troubleshooting](TROUBLESHOOTING.md)).
+npm's `package-lock.json` is this repo's canonical lockfile — do not commit other managers' lockfiles or workspace artifacts (they are git-ignored). Running the checkout with pnpm works (verified 2026-08-23: the full suite runs under pnpm v11), with one known macOS caveat — pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper` (`posix_spawnp failed`). The broker repairs it automatically at launch; running `npm test` before any launch still needs the one-line fix in [Troubleshooting](TROUBLESHOOTING.md).
 
 `node-pty` 1.1.0 supplies Windows ConPTY and Unix PTY bindings for the broker. It is MIT licensed. The package is marked `private` (unpublished) and exposes exactly one executable: the reversible installer CLI (`effort-autopilot` → `bin/effort-autopilot-cli.js`, see [Installation](INSTALL.md)). No script permanently replaces or renames the real `claude` executable; publication requires the [release checklist](RELEASE_CHECKLIST.md).
 
@@ -34,7 +34,7 @@ npm test
 npm run broker:poc:test
 ```
 
-The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, and internal benchmark regressions.
+The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, the spawn-helper execute-bit preflight with the directly-attached PTY fallback, and internal benchmark regressions.
 
 Plugin validation is optional historical scaffolding and does not prove broker behavior:
 
