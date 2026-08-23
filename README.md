@@ -31,7 +31,7 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 ### What works right now
 
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
-- Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented (a first hardware run on 2026-08-23 surfaced two bugs, both fixed; re-verification pending).
+- Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented (hardware verification in progress: the 2026-08-23 runs surfaced three issues — two fixed in code and re-verified on hardware, one pnpm-specific with a documented one-line workaround; 4 platform-simulation tests still fail there, tracked in issue #24).
 - The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
 - 191 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 

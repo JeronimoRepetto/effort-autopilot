@@ -28,6 +28,17 @@ A broker setup step failed after launch (for example the temporary settings writ
 
 Fixed on 2026-08-23 (issue #18): the IPC socket path exceeded the 104-byte macOS `sun_path` limit, so `bind()` silently truncated it and the later `chmod` failed. The endpoint basename is now short (`ea-<pid>-<hex>.sock`), the byte length is guarded explicitly (`ipc-endpoint-too-long` instead of silent truncation), and a post-listen failure closes the server instead of hanging the test runner. If you still see this, you are on an older checkout — update.
 
+## macOS: `posix_spawnp failed` (the launch aborts, or the ConPTY test fails)
+
+`node-pty` on macOS executes a small `spawn-helper` binary shipped prebuilt inside its package; `posix_spawnp failed` means the OS refused to execute it. Verified on real hardware (2026-08-23, pnpm v11.1.1, darwin-arm64): installing dependencies with pnpm can drop the helper's execute bit (`-rw-r--r--` instead of `-rwxr-xr-x`) while `pty.node` still loads fine, because `require()` only needs read permission. The fix is one command, then re-run:
+
+```zsh
+chmod +x node_modules/.pnpm/node-pty@*/node_modules/node-pty/prebuilds/*/spawn-helper   # pnpm layout
+chmod +x node_modules/node-pty/prebuilds/*/spawn-helper                                  # npm layout
+```
+
+Note that `pnpm rebuild node-pty` does NOT fix this: node-pty's install script short-circuits without compiling whenever its shipped prebuilds exist. Product-level automation of this repair is tracked in issue #26.
+
 ## The broker raised my effort to high and I didn't ask
 
 That is the `autopilot-wins` uncertainty floor, not an error: when classification is uncertain and no manual `/effort` choice is standing and the level is below `high`, the broker applies `high` and reports `applied` with `uncertainty-floor-acknowledged`. To keep your own level, type `/effort <level>` (it stands until an applied automatic turn or `/effort auto`), or switch back to the default policy with `node bin/effort-autopilot-cli.js policy manual-wins`.

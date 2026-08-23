@@ -18,6 +18,10 @@ Install roots: `%LOCALAPPDATA%\effort-autopilot` on Windows, `~/.effort-autopilo
 
 Non-interactive automation can pass `--yes --policy manual-wins|autopilot-wins`.
 
+### Installing dependencies with pnpm
+
+The repository's canonical lockfile is npm's `package-lock.json`, but running the checkout with pnpm works, with one known macOS caveat: pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper`, which makes every launch and the PTY test die with `posix_spawnp failed`. The one-line fix is in [Troubleshooting](TROUBLESHOOTING.md).
+
 ## Uninstall / status / policy
 
 ```powershell
@@ -75,4 +79,4 @@ On Claude Code 2.1.238, every `/effort` change except `max` also saves that leve
 | --- | --- |
 | Windows 10/11 | Verified live (development machine) |
 | Linux | Implemented; verified via WSL only |
-| macOS | Implemented; **not yet fully verified on real hardware** — the installer warns. A first hardware run (2026-08-23) surfaced an IPC socket-path overflow and a broker-startup abort; both are fixed and regression-tested, re-verification pending |
+| macOS | Implemented; **hardware verification in progress**. The 2026-08-23 hardware runs surfaced and confirmed three issues: an IPC socket-path overflow and a broker-startup abort (both fixed in code and re-verified — the live IPC and PTY tests now pass on hardware) and a pnpm-specific missing execute bit on node-pty's prebuilt helper (documented workaround in [Troubleshooting](TROUBLESHOOTING.md)). Still open: 4 platform-simulation test failures (issue #24) and the full live-launch proof |
