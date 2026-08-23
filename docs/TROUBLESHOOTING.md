@@ -18,7 +18,15 @@ This is correct fail-open behavior when the cause is one of:
 - `ambiguous-terminal-state`
 - `effort-not-acknowledged`
 
-The task is forwarded once at Claude's current/default/user-selected effort and status must say `outcome=unchanged`. It must not retry or route through the legacy launcher.
+The task is forwarded once at Claude's current/default/user-selected effort and status must say `outcome=unchanged`. It must not retry or route through the legacy launcher. (A `broker-setup-failed` notice is not a turn cause — it is launch-level; see the next section.)
+
+## Automatic effort is disabled for this launch (broker-setup-failed)
+
+A broker setup step failed after launch (for example the temporary settings write or the local IPC server), so the broker cleaned up and started Claude completely unchanged with your original arguments — fail-open by contract, never a blocked launch. The parenthesized cause after `broker-setup-failed:` is prompt-free and names the failing operation; it may include local file paths (for example under your `$TMPDIR`), so redact your username before sharing it publicly. Automatic effort returns on the next launch once the underlying cause (disk permissions, an exotic `$TMPDIR`) is resolved; if it persists, report the cause code.
+
+## macOS: chmod ENOENT on a `.sock` path, or `npm test` hangs
+
+Fixed on 2026-08-23 (issue #18): the IPC socket path exceeded the 104-byte macOS `sun_path` limit, so `bind()` silently truncated it and the later `chmod` failed. The endpoint basename is now short (`ea-<pid>-<hex>.sock`), the byte length is guarded explicitly (`ipc-endpoint-too-long` instead of silent truncation), and a post-listen failure closes the server instead of hanging the test runner. If you still see this, you are on an older checkout — update.
 
 ## The broker raised my effort to high and I didn't ask
 

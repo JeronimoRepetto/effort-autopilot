@@ -20,7 +20,7 @@ Control: classification is in-process and has no network dependencies. Decisions
 
 ### Local hook IPC and replay
 
-Control: every broker process creates a unique local named pipe/socket and random 256-bit token. The token is inherited by the child/hook environment, never placed in command arguments or logs. Frames are bounded, tokens are compared in constant time, Unix sockets use mode `0600`, and Windows pipe access is additionally protected by the token and the creating user's process security context. The hook sends prompt content only to that local endpoint.
+Control: every broker process creates a per-process local named pipe/socket (short pid-plus-random basename under the user's private temp directory; a colliding bind fails instead of being reused, and a POSIX path over the `sun_path` limit is rejected explicitly rather than silently truncated) and a random 256-bit token. Endpoint-name secrecy is not a security boundary: authentication rests on the token and the filesystem mode. The token is inherited by the child/hook environment, never placed in command arguments or logs. Frames are bounded, tokens are compared in constant time, Unix sockets use mode `0600` — enforced: if the permission step fails, the server is closed and the socket removed instead of left listening — and Windows pipe access is additionally protected by the token and the creating user's process security context. The hook sends prompt content only to that local endpoint.
 
 Replay authorization is in memory, expires after five seconds, binds session ID to a SHA-256 prompt digest, and is consumed once. The digest is never logged or persisted. Repeating identical text later creates a new normal routing ticket.
 

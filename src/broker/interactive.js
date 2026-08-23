@@ -46,6 +46,10 @@ export async function runInteractiveBroker({
   input = process.stdin,
   output = process.stdout,
   errorOutput = process.stderr,
+  // Test seams; production callers rely on the defaults.
+  ipcServerStarter = startBrokerIpcServer,
+  relayPlain = relayPlainSession,
+  tempRoot = os.tmpdir(),
 } = {}) {
   if (!input.isTTY || !output.isTTY) {
     throw new Error("the interactive broker requires a terminal");
@@ -99,7 +103,7 @@ export async function runInteractiveBroker({
     errorOutput.write(
       `Effort Autopilot: automatic effort is disabled for this launch (${passthroughCause}); Claude runs unchanged.\r\n`,
     );
-    return relayPlainSession({
+    return relayPlain({
       claudeExecutable,
       claudeArgs: launch.forwardArgs,
       cwd,
@@ -163,20 +167,6 @@ export async function runInteractiveBroker({
     }
   }
 
-  const temporary = await mkdtemp(path.join(os.tmpdir(), "effort-autopilot-session-"));
-  const settingsPath = path.join(temporary, "settings.json");
-  await writeFile(settingsPath, JSON.stringify(mergedSettings), { encoding: "utf8", mode: 0o600 });
-
-  const spawnArgs = [...launch.forwardArgs];
-  if (launch.settings) {
-    if (launch.settings.form === "separate") spawnArgs[launch.settings.index + 1] = settingsPath;
-    else spawnArgs[launch.settings.index] = `--settings=${settingsPath}`;
-  } else {
-    spawnArgs.push("--settings", settingsPath);
-  }
-  if (!launch.effort) spawnArgs.push("--effort", baseline.effort);
-
-  const identity = createIpcIdentity();
   const coordinator = new HybridBrokerCoordinator();
 
   let session;
@@ -196,46 +186,91 @@ export async function runInteractiveBroker({
     onModelChange: () => policy.handleModelChange(),
   });
 
-  const server = await startBrokerIpcServer({
-    ...identity,
-    coordinator,
-    onDecision: ({ event, sessionId }) => {
-      if (event !== "SessionStart" || !sessionId) return;
-      policy.handleSessionStart(sessionId, launch.effort);
-    },
-    onBlocked: ({ ticketId }) => {
-      relay?.pauseForRouting();
-      const route = coordinator
-        .routeTicket(ticketId, {
-          classifier,
-          classificationTimeoutMs,
-          config: { ceiling: "max", baselineEffort: "medium" },
-          uncertaintyFloorEffort: autopilotWins ? "high" : null,
-          applyEffort: async (effort) => {
-            if (policy.shouldSkipApplication(effort)) {
-              return { acknowledged: true, effort };
-            }
-            observer.beginBrokerApplication(effort);
-            try {
-              const result = await session.applyEffort(effort);
-              if (result.acknowledged) policy.noteAcknowledgedApplication(effort);
-              return result;
-            } finally {
-              observer.endBrokerApplication();
-            }
-          },
-          reinjectPrompt: (prompt) => session.forwardPrompt(prompt),
-        })
-        .catch((error) => {
-          errorOutput.write(`\r\nEffort Autopilot could not route this turn: ${error.message}\r\n`);
-        })
-        .finally(() => {
-          activeRoutes.delete(route);
-          relay?.resumeAfterRouting();
-        });
-      activeRoutes.add(route);
-    },
-  });
+  // Hard contract: from here on, any broker setup failure degrades to an
+  // unchanged Claude session instead of aborting the launch (issue #19). The
+  // unrecoverable preconditions (no TTY, recursion guard, missing real
+  // Claude) were handled above and rightly stay hard errors — the fallback
+  // needs the real executable anyway.
+  const spawnArgs = [...launch.forwardArgs];
+  let temporary = null;
+  let identity;
+  let server = null;
+  try {
+    temporary = await mkdtemp(path.join(tempRoot, "effort-autopilot-session-"));
+    const settingsPath = path.join(temporary, "settings.json");
+    await writeFile(settingsPath, JSON.stringify(mergedSettings), {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+
+    if (launch.settings) {
+      if (launch.settings.form === "separate") spawnArgs[launch.settings.index + 1] = settingsPath;
+      else spawnArgs[launch.settings.index] = `--settings=${settingsPath}`;
+    } else {
+      spawnArgs.push("--settings", settingsPath);
+    }
+    if (!launch.effort) spawnArgs.push("--effort", baseline.effort);
+
+    identity = createIpcIdentity();
+    server = await ipcServerStarter({
+      ...identity,
+      coordinator,
+      onDecision: ({ event, sessionId }) => {
+        if (event !== "SessionStart" || !sessionId) return;
+        policy.handleSessionStart(sessionId, launch.effort);
+      },
+      onBlocked: ({ ticketId }) => {
+        relay?.pauseForRouting();
+        const route = coordinator
+          .routeTicket(ticketId, {
+            classifier,
+            classificationTimeoutMs,
+            config: { ceiling: "max", baselineEffort: "medium" },
+            uncertaintyFloorEffort: autopilotWins ? "high" : null,
+            applyEffort: async (effort) => {
+              if (policy.shouldSkipApplication(effort)) {
+                return { acknowledged: true, effort };
+              }
+              observer.beginBrokerApplication(effort);
+              try {
+                const result = await session.applyEffort(effort);
+                if (result.acknowledged) policy.noteAcknowledgedApplication(effort);
+                return result;
+              } finally {
+                observer.endBrokerApplication();
+              }
+            },
+            reinjectPrompt: (prompt) => session.forwardPrompt(prompt),
+          })
+          .catch((error) => {
+            errorOutput.write(
+              `\r\nEffort Autopilot could not route this turn: ${error.message}\r\n`,
+            );
+          })
+          .finally(() => {
+            activeRoutes.delete(route);
+            relay?.resumeAfterRouting();
+          });
+        activeRoutes.add(route);
+      },
+    });
+  } catch (error) {
+    // Fail-open: clean up whatever was partially created, report a visible,
+    // prompt-free cause, and give the user their Claude session unchanged
+    // (original arguments — no injected --settings, no --effort pin).
+    if (server) await server.close().catch(() => {});
+    if (temporary) await rm(temporary, { recursive: true, force: true }).catch(() => {});
+    errorOutput.write(
+      `Effort Autopilot: automatic effort is disabled for this launch (broker-setup-failed: ${error.message}); Claude runs unchanged.\r\n`,
+    );
+    return relayPlain({
+      claudeExecutable,
+      claudeArgs: launch.forwardArgs,
+      cwd,
+      input,
+      output,
+    });
+  }
 
   // A crash or forced exit must not leave the child or the temporary hook
   // settings behind; the 'exit' handler is synchronous by contract.
