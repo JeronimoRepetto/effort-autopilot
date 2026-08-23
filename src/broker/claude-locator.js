@@ -23,12 +23,16 @@ export function selectRealClaudeExecutable(
   platform = process.platform,
 ) {
   const caseInsensitive = platform === "win32";
+  // Honor the platform parameter for path semantics too, so a win32 layout
+  // simulated on a POSIX host still parses backslash paths (issue #24).
+  const pathImpl = platform === "win32" ? path.win32 : path.posix;
   const excluded = new Set(
     excludedDirectories.map((directory) => normalizeDirectory(directory, caseInsensitive)),
   );
   return (
     candidates.find(
-      (candidate) => !excluded.has(normalizeDirectory(path.dirname(candidate), caseInsensitive)),
+      (candidate) =>
+        !excluded.has(normalizeDirectory(pathImpl.dirname(candidate), caseInsensitive)),
     ) ?? null
   );
 }

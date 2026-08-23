@@ -34,8 +34,9 @@ test("install paths are platform-correct and derived from one root", () => {
   assert.match(globalConfigPath(win), /effort-autopilot\\config\.json$/);
 
   const nix = { platform: "linux", env: {}, home: "/home/u" };
-  assert.match(installRoot(nix).replaceAll("\\", "/"), /\/home\/u\/.effort-autopilot$/);
-  assert.match(shimExecutablePath(nix).replaceAll("\\", "/"), /shim\/claude$/);
+  assert.equal(installRoot(nix), "/home/u/.effort-autopilot");
+  assert.equal(shimExecutablePath(nix), "/home/u/.effort-autopilot/shim/claude");
+  assert.equal(globalConfigPath(nix), "/home/u/.effort-autopilot/config.json");
 });
 
 test("PATH entry editing is idempotent, surgical, and case-insensitive on Windows", () => {
