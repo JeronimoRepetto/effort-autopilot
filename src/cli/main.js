@@ -8,7 +8,7 @@ import { classifyPrompt } from "../core/classifier.js";
 import { resolveModelProfile } from "../core/model-profiles.js";
 import { DEFAULT_FALLBACK, parseAndClassifyEnvelope } from "../core/protocol.js";
 import { launchTask } from "../launcher/launch.js";
-import { resolveExecutionPlan } from "../launcher/plan.js";
+import { resolveExecutionPlan } from "../core/execution-plan.js";
 import { HELP_TEXT, parseCliArgs } from "./args.js";
 
 const MAX_INPUT_BYTES = 1024 * 1024;
@@ -57,7 +57,7 @@ export async function runCli(
     stderr = process.stderr,
     runner = executeClaudeTask,
     metadataCollector = collectEnvironmentMetadata,
-    version = "0.2.0",
+    version = "0.3.0-beta.1",
   } = {},
 ) {
   const parsed = parseCliArgs(argv, env);

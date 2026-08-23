@@ -1,5 +1,5 @@
 import { classifyEnvelope } from "../core/protocol.js";
-import { resolveExecutionPlan } from "./plan.js";
+import { resolveExecutionPlan } from "../core/execution-plan.js";
 
 /**
  * Classify first, then invoke the supplied Claude runner exactly once.

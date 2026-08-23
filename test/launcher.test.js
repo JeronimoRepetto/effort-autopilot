@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { launchTask } from "../src/launcher/launch.js";
-import { resolveExecutionPlan } from "../src/launcher/plan.js";
+import { resolveExecutionPlan } from "../src/core/execution-plan.js";
 
 function decision(tier, effort = tier) {
   return {

@@ -1,6 +1,6 @@
 # Adding a host adapter
 
-The shared core predicts a minimum sufficient tier; an adapter truthfully maps that plan to a host's documented pre-call controls. A future Codex adapter is possible, but is not implemented.
+The shared core predicts a minimum sufficient tier; an adapter truthfully maps that plan to a host's documented pre-call controls. The per-host effort vocabulary layer already exists as data ([`src/core/host-effort-vocabulary.js`](../src/core/host-effort-vocabulary.js): ordered native levels plus tier→native mapping); only the Claude Code vocabulary ships today. A future Codex adapter is possible, but is not implemented.
 
 ## Required contract
 
@@ -32,17 +32,17 @@ const outcome = await launchTask({
 });
 ```
 
-The runner receives `{prompt, effort, ...execution}` exactly once. It should return normalized result and usage data or throw a typed, prompt-free error. If the host does not support the planned effort, fail before or during that one execution; do not hide a second attempt.
+The runner receives `{prompt, effort, ...execution}` exactly once. It should return normalized result and usage data or throw a typed, prompt-free error. If the host does not support the planned effort, fail before or during that one execution; do not hide a second attempt. Plan resolution itself (ceiling clamp, ultracode suppression, baseline fallback) lives in [`src/core/execution-plan.js`](../src/core/execution-plan.js); `launchTask` only invokes the runner exactly once.
 
 ## Capability profiles
 
-Add a versioned profile provider only if it can obtain cheap, local, non-secret facts without a model call. Profile identity should include host, model family/version, supported effort ladder, caps, calibration dataset, and feature schema. Profile selection must never substitute a different model.
+Add a versioned profile provider only if it can obtain cheap, local, non-secret facts without a model call. Profile identity should include host, model family/version, caps, calibration dataset, and feature schema; the host's supported effort ladder itself lives in the separately versioned host effort vocabulary (`nativeLevels`), not in the model profile. Profile selection must never substitute a different model.
 
 ## Codex-specific checklist
 
 Before implementation, verify current official Codex controls for pre-call effort, authentication inheritance, model preservation, one-shot execution, stdin or equivalent private input, session persistence, usage reporting, and rate limits. If any behavior is unavailable, state the limitation instead of mapping to an undocumented field.
 
-Keep Codex transport code under a new `src/adapters/codex` directory and its CLI surface separate where semantics differ. Reuse `src/core` and `src/launcher`; do not add Codex vocabulary or provider routing to the classifier.
+Keep Codex transport code under a new `src/adapters/codex` directory and its CLI surface separate where semantics differ. Reuse `src/core` (planning lives in `src/core/execution-plan.js`; `src/launcher` holds only the internal exactly-one runner invocation and is excluded from the npm tarball, so packaged code must never import from it). Add the Codex effort vocabulary as a data entry in `src/core/host-effort-vocabulary.js`; do not add provider routing to the classifier.
 
 ## Tests for every adapter
 

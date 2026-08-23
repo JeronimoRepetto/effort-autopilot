@@ -1,6 +1,6 @@
 import { resolveModelProfile } from "../core/model-profiles.js";
 import { classifyEnvelope } from "../core/protocol.js";
-import { resolveExecutionPlan } from "../launcher/plan.js";
+import { resolveExecutionPlan } from "../core/execution-plan.js";
 
 export class GatewayTransformError extends Error {
   constructor(code, cause) {

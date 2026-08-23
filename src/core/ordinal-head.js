@@ -1,3 +1,5 @@
+import { EFFORT_LEVELS } from "./effort-ladder.js";
+
 /**
  * Proportional-odds ordinal head ("the AI that returns the effort").
  *
@@ -7,7 +9,7 @@
  * dependencies, microsecond inference.
  */
 
-export const ORDINAL_TIERS = Object.freeze(["low", "medium", "high", "xhigh", "max"]);
+export const ORDINAL_TIERS = EFFORT_LEVELS;
 export const ORDINAL_HEAD_SCHEMA_VERSION = 1;
 
 function sigmoid(value) {

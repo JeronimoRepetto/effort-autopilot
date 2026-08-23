@@ -22,7 +22,7 @@ The task is forwarded once at Claude's current/default/user-selected effort and 
 
 ## The broker raised my effort to high and I didn't ask
 
-That is the `autopilot-wins` uncertainty floor, not an error: when classification is uncertain and no manual `/effort` choice is standing and the level is below `high`, the broker applies `high` and reports `applied` with `uncertainty-floor-acknowledged`. To keep your own level, type `/effort <level>` (it stands until an applied automatic turn or `/effort auto`), or switch back to the default policy with `effort-autopilot policy manual-wins`.
+That is the `autopilot-wins` uncertainty floor, not an error: when classification is uncertain and no manual `/effort` choice is standing and the level is below `high`, the broker applies `high` and reports `applied` with `uncertainty-floor-acknowledged`. To keep your own level, type `/effort <level>` (it stands until an applied automatic turn or `/effort auto`), or switch back to the default policy with `node bin/effort-autopilot-cli.js policy manual-wins`.
 
 ## ConPTY test fails on Windows
 
@@ -42,7 +42,7 @@ It opens stock Claude Code but installs an independent temporary block hook, so 
 
 ## Why the broker is not globally installed
 
-The hybrid uses `UserPromptSubmit` instead of guessing semantic state from terminal bytes, and its guarded installed proof passes. The former release blockers (mid-session `/model` ambiguity marking, explicit user-effort observation, crash cleanup, live prompt proofs) are implemented and live-validated, and a reversible installer now exists — see [Installation](INSTALL.md). Do not create a PATH alias manually; use `effort-autopilot install`/`uninstall` so the change stays reversible and backed up.
+The hybrid uses `UserPromptSubmit` instead of guessing semantic state from terminal bytes, and its guarded installed proof passes. The former release blockers (mid-session `/model` ambiguity marking, explicit user-effort observation, crash cleanup, live prompt proofs) are implemented and live-validated, and a reversible installer now exists — see [Installation](INSTALL.md). Do not create a PATH alias manually; use the installer CLI's `install`/`uninstall` (`node bin/effort-autopilot-cli.js`) so the change stays reversible and backed up.
 
 ## Claude shows “operation blocked by hook”
 

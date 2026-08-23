@@ -1,4 +1,4 @@
-import { isEffort } from "../launcher/plan.js";
+import { formatEffortLevels, isEffort } from "../core/effort-ladder.js";
 
 const VALUE_OPTIONS = new Set([
   "--ceiling",
@@ -77,10 +77,9 @@ export function parseCliArgs(argv, env = process.env) {
     }
   }
 
-  if (!isEffort(options.ceiling))
-    throw new Error("--ceiling must be low, medium, high, xhigh, or max");
+  if (!isEffort(options.ceiling)) throw new Error(`--ceiling must be ${formatEffortLevels()}`);
   if (!isEffort(options.baselineEffort))
-    throw new Error("--baseline must be low, medium, high, xhigh, or max");
+    throw new Error(`--baseline must be ${formatEffortLevels()}`);
   if (options.permissionMode && !PERMISSION_MODES.has(options.permissionMode)) {
     throw new Error("unsupported --permission-mode");
   }

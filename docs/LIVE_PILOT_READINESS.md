@@ -52,7 +52,7 @@ npm run pilot:prepare-live
 The live command is exactly five tasks and must be started in the explicitly visible PowerShell window:
 
 ```powershell
-effort-autopilot-pilot run `
+node bin/effort-autopilot-pilot.js run `
   --manifest evaluation/live-pilot-humaneval-5.json `
   --live --confirm-subscription-use --inherit-model `
   --max-runs 5 --permission-mode acceptEdits `
@@ -84,8 +84,8 @@ Completed task IDs are never repeated by resume. Rate limit, execution timeout, 
 Status and an explicitly authorized later resume are:
 
 ```powershell
-effort-autopilot-pilot status --manifest evaluation/live-pilot-humaneval-5.json --max-runs 5
-effort-autopilot-pilot resume --manifest evaluation/live-pilot-humaneval-5.json --live --confirm-subscription-use --inherit-model --max-runs 5 --permission-mode acceptEdits
+node bin/effort-autopilot-pilot.js status --manifest evaluation/live-pilot-humaneval-5.json --max-runs 5
+node bin/effort-autopilot-pilot.js resume --manifest evaluation/live-pilot-humaneval-5.json --live --confirm-subscription-use --inherit-model --max-runs 5 --permission-mode acceptEdits
 ```
 
 ## Confirmation boundary

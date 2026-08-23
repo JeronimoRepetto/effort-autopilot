@@ -20,7 +20,7 @@ The metadata collector reads only bounded local facts: runtime platform, Git tra
 
 ## Policy data
 
-All policy constants live in [`src/core/policy.js`](../src/core/policy.js). This keeps reviewable data separate from the classifier algorithm.
+Scoring policy constants live in [`src/core/policy.js`](../src/core/policy.js). The canonical effort ladder is defined once in [`src/core/effort-ladder.js`](../src/core/effort-ladder.js), and each host's effort vocabulary (ordered native levels plus tier→native mapping) is data in [`src/core/host-effort-vocabulary.js`](../src/core/host-effort-vocabulary.js). This keeps reviewable data separate from the classifier algorithm.
 
 ### Score thresholds
 
@@ -76,11 +76,11 @@ The confidence number is not statistically calibrated. [Calibration](CALIBRATION
 
 Ultracode is an orchestration recommendation, not model effort. Unless explicitly requested, a score of at least 13 must also have at least 45 words and at least two long-horizon workstream signals among broad scope, multiple steps, architecture, investigation, high stakes, and deep review. Otherwise it is downgraded to `max` with an explanatory signal.
 
-The broker never enables ultracode workflows. Planning may map the recommendation to standard xhigh-or-lower effort for internal evaluation, but the product cannot silently add orchestration or subagents.
+The broker never enables ultracode workflows. The host effort vocabulary maps the recommendation to a native level inside the classifier's execution recommendation (ultracode → `xhigh` on Claude Code), planning still clamps to the ceiling, and the product cannot silently add orchestration or subagents.
 
 ## Model-relative and capability resolution
 
-After the bootstrap tier, an optional model `effortOffset` shifts ordinary effort tiers by up to two steps. Explicit max or ultracode intent is not shifted. `effortCap` and `supportedEfforts` then provide an **unapplied** compatibility recommendation. The broker applies user precedence, confidence, acknowledgement, and ceiling rules independently.
+After the bootstrap tier, an optional model `effortOffset` shifts ordinary effort tiers by up to two steps. Explicit max or ultracode intent is not shifted. `effortCap` and `supportedEfforts` — filtered against the host vocabulary's native levels — then provide an **unapplied** compatibility recommendation. The broker applies user precedence, confidence, acknowledgement, and ceiling rules independently.
 
 Current profiles are user-supplied inputs, not validated empirical calibrations. Dataset and calibration versions should be added before learned profiles are distributed.
 

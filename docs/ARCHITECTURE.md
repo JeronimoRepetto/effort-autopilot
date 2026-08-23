@@ -29,6 +29,7 @@ The broker never changes provider/model and never sends a classification request
 | Layer | State |
 | --- | --- |
 | `src/core` classifier/profiles | Implemented, deterministic bootstrap |
+| `src/core` effort ladder/vocabulary/plan (`effort-ladder.js`, `host-effort-vocabulary.js`, `execution-plan.js`) | Implemented: single canonical ladder, per-host vocabulary as data (Claude Code only), pre-call plan resolution |
 | `src/broker/turn-controller.js` | Implemented fail-open/exact-once contract, incl. the autopilot-wins uncertainty floor |
 | `src/broker/hybrid-coordinator.js` | Hook block, ticket routing, one-use replay implemented |
 | `src/broker/ipc.js` / `hook-client.js` | Authenticated local named-pipe hook bridge implemented |
@@ -36,7 +37,7 @@ The broker never changes provider/model and never sends a classification request
 | Stock TUI semantic state detector | Resolved by `UserPromptSubmit`; no TUI-byte guessing |
 | `/effort` local command/ack | Installed CLI verified at `max`, zero inference |
 | `src/gateway/request-transform.js` | Synthetic supported-protocol proof only |
-| Global shim installer | Implemented: consent-gated, reversible (`effort-autopilot install`/`uninstall`, see [INSTALL.md](INSTALL.md)); never touches Claude settings |
+| Global shim installer | Implemented: consent-gated, reversible (`install`/`uninstall` via `node bin/effort-autopilot-cli.js`, see [INSTALL.md](INSTALL.md)); never touches Claude settings |
 | Installed zero-inference proof | Passed on Claude Code 2.1.238 |
 | Live prompt proofs | User-authorized runs covered the applied branch (low and xhigh, incl. the escalation confirmation dialog), fail-open, and manual precedence |
 

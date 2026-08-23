@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "effort-autopilot",
   "displayName": "Effort Autopilot",
-  "version": "0.2.0",
+  "version": "0.3.0-beta.1",
   "description": "Optional manual effort skills and experimental scaffolding; no automatic hook or same-prompt effort mutation is included.",
   "author": {
     "name": "Jeronimo Repetto"

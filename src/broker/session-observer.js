@@ -1,3 +1,4 @@
+import { EFFORT_LEVELS } from "../core/effort-ladder.js";
 import { terminalText } from "./pty-session.js";
 
 /**
@@ -24,7 +25,10 @@ import { terminalText } from "./pty-session.js";
 // on 2.1.238 for /effort, /effort auto, and /model). Requiring it prevents
 // assistant text or displayed file content that merely QUOTES the wording
 // (this repository's own docs contain it) from being read as a real command.
-const EFFORT_SET_PATTERN = /⎿\s*Set effort level to (low|medium|high|xhigh|max)\b/gi;
+const EFFORT_SET_PATTERN = new RegExp(
+  `⎿\\s*Set effort level to (${EFFORT_LEVELS.join("|")})\\b`,
+  "gi",
+);
 const EFFORT_AUTO_PATTERN = /⎿\s*Effort level set to auto\b/gi;
 const MODEL_SET_PATTERN = /⎿\s*Set model to \S/g;
 

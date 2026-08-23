@@ -60,6 +60,9 @@ test("documentation index covers every focused guide", () => {
     "HOST_ADAPTERS.md",
     "ADAPTER_DECISION.md",
     "CALIBRATION.md",
+    "INSTALL.md",
+    "RELEASE_CHECKLIST.md",
+    "ISOLATED_TEST.md",
   ];
   for (const name of required) assert.match(index, new RegExp(`\\(${name}\\)`));
 });
