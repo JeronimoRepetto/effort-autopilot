@@ -1,6 +1,16 @@
+import { createRequire } from "node:module";
 import process from "node:process";
 
-import * as nodePty from "node-pty";
+// node-pty loads its native binding at module scope, so a static import would
+// crash during ESM evaluation — before any fail-open guard can run — whenever
+// pty.node is missing or unloadable (blocked build scripts, ABI/arch
+// mismatch). Loading lazily inside spawn() turns that failure into a
+// synchronous exception exactly where the broker's fallback layers catch it.
+let nodePty = null;
+function loadNodePty() {
+  if (!nodePty) nodePty = createRequire(import.meta.url)("node-pty");
+  return nodePty;
+}
 
 export function terminalText(value) {
   return value
@@ -40,7 +50,7 @@ export class PtySession {
   }
 
   static spawn(command, args = [], options = {}) {
-    const child = nodePty.spawn(command, args, {
+    const child = loadNodePty().spawn(command, args, {
       name: "xterm-256color",
       cols: options.cols ?? 100,
       rows: options.rows ?? 30,

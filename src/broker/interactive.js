@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { rmSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -13,6 +14,7 @@ import { readGlobalConfig, readProjectConfig, resolveAutopilotPolicy } from "./p
 import { HybridBrokerCoordinator } from "./hybrid-coordinator.js";
 import { createIpcIdentity, startBrokerIpcServer } from "./ipc.js";
 import { PtyInputRelay } from "./input-relay.js";
+import { ensureSpawnHelperExecutable } from "./pty-preflight.js";
 import { PtySession } from "./pty-session.js";
 import { SessionOutputObserver } from "./session-observer.js";
 import { SessionEffortPolicy } from "./session-policy.js";
@@ -50,6 +52,8 @@ export async function runInteractiveBroker({
   ipcServerStarter = startBrokerIpcServer,
   relayPlain = relayPlainSession,
   tempRoot = os.tmpdir(),
+  ptySessionFactory = PtySession.spawn,
+  spawnHelperPreflight = ensureSpawnHelperExecutable,
 } = {}) {
   if (!input.isTTY || !output.isTTY) {
     throw new Error("the interactive broker requires a terminal");
@@ -58,6 +62,22 @@ export async function runInteractiveBroker({
   // instead of fork-bombing the machine.
   if (process.env.EFFORT_AUTOPILOT_BROKER_ACTIVE === "1") {
     throw new Error("broker recursion detected: the claude shim resolved back to itself");
+  }
+
+  // Best-effort repair of node-pty's spawn-helper execute bit (issue #26;
+  // some package managers drop it). Runs before the passthrough decision so
+  // every launch shape self-heals — passthrough sessions spawn a PTY too.
+  // Never throws; the PTY spawn is the arbiter and the fail-open layers
+  // catch whatever remains broken.
+  const preflight = spawnHelperPreflight();
+  if (preflight.status === "repaired") {
+    errorOutput.write(
+      `Effort Autopilot: repaired the execute permission of node-pty's spawn-helper (${preflight.helperPaths.join(", ")}); some package managers drop it during install.\r\n`,
+    );
+  } else if (preflight.status === "failed") {
+    errorOutput.write(
+      `Effort Autopilot: node-pty's spawn-helper is not executable and could not be repaired; if the launch degrades, run: chmod +x ${preflight.helperPaths.join(" ")}\r\n`,
+    );
   }
 
   const launch = parseClaudeLaunchArgs(claudeArgs);
@@ -109,6 +129,7 @@ export async function runInteractiveBroker({
       cwd,
       input,
       output,
+      errorOutput,
     });
   }
 
@@ -269,6 +290,7 @@ export async function runInteractiveBroker({
       cwd,
       input,
       output,
+      errorOutput,
     });
   }
 
@@ -290,18 +312,36 @@ export async function runInteractiveBroker({
 
   try {
     const dimensions = terminalDimensions();
-    session = PtySession.spawn(claudeExecutable, spawnArgs, {
-      cwd,
-      env: {
-        ...process.env,
-        EFFORT_AUTOPILOT_BROKER_ACTIVE: "1",
-        EFFORT_AUTOPILOT_IPC_ENDPOINT: identity.endpoint,
-        EFFORT_AUTOPILOT_IPC_TOKEN: identity.token,
-      },
-      cols: dimensions.cols,
-      rows: dimensions.rows,
-      acknowledgementTimeoutMs: 5000,
-    });
+    // The catch wraps ONLY the spawn: a failure mid-session must never
+    // relaunch a second Claude. On spawn failure the surrounding finally
+    // still cleans the IPC server and temporary settings, so the fallback
+    // must launch with the ORIGINAL arguments (issue #25).
+    try {
+      session = ptySessionFactory(claudeExecutable, spawnArgs, {
+        cwd,
+        env: {
+          ...process.env,
+          EFFORT_AUTOPILOT_BROKER_ACTIVE: "1",
+          EFFORT_AUTOPILOT_IPC_ENDPOINT: identity.endpoint,
+          EFFORT_AUTOPILOT_IPC_TOKEN: identity.token,
+        },
+        cols: dimensions.cols,
+        rows: dimensions.rows,
+        acknowledgementTimeoutMs: 5000,
+      });
+    } catch (error) {
+      errorOutput.write(
+        `Effort Autopilot: automatic effort is disabled for this launch (pty-spawn-failed: ${error.message}); Claude runs unchanged.\r\n`,
+      );
+      return relayPlain({
+        claudeExecutable,
+        claudeArgs: launch.forwardArgs,
+        cwd,
+        input,
+        output,
+        errorOutput,
+      });
+    }
     outputSubscription = session.child.onData((data) => {
       output.write(data);
       observer.feed(data);
@@ -333,20 +373,109 @@ export async function runInteractiveBroker({
   }
 }
 
-async function relayPlainSession({ claudeExecutable, claudeArgs, cwd, input, output }) {
+/**
+ * Runs Claude with the terminal inherited directly (no PTY, no relay): the
+ * last-resort degradation when node-pty itself cannot spawn (issue #25). The
+ * child owns the real TTY — raw mode, resize, and Ctrl-C are its business —
+ * so the broker only parks SIGINT/SIGQUIT for the cooked-mode startup window
+ * (same foreground process group) and reports the child's outcome.
+ */
+async function runInheritedChild({
+  claudeExecutable,
+  claudeArgs,
+  cwd,
+  plainSpawner = spawn,
+  platform = process.platform,
+  env = process.env,
+}) {
+  let command = claudeExecutable;
+  let args = claudeArgs;
+  const options = {
+    cwd,
+    stdio: "inherit",
+    env: { ...env, EFFORT_AUTOPILOT_BROKER_ACTIVE: "1" },
+  };
+  if (platform === "win32" && /\.(cmd|bat)$/i.test(claudeExecutable)) {
+    // Node >=20.12 refuses to spawn .cmd/.bat without a shell (EINVAL,
+    // CVE-2024-27980), and shell:true both quotes incorrectly and warns
+    // (DEP0190) on newer Node. Invoke cmd.exe explicitly with verbatim
+    // arguments and our own quoting. Known cmd limitation: %VAR% sequences
+    // inside arguments are still expanded by cmd.
+    const parts = [claudeExecutable, ...claudeArgs].map(
+      (part) => `"${String(part).replaceAll('"', '""')}"`,
+    );
+    command = env.ComSpec ?? "cmd.exe";
+    args = ["/d", "/s", "/c", `"${parts.join(" ")}"`];
+    options.windowsVerbatimArguments = true;
+  }
+  const child = plainSpawner(command, args, options);
+  const parkedSignal = () => {};
+  process.on("SIGINT", parkedSignal);
+  if (platform !== "win32") process.on("SIGQUIT", parkedSignal);
+  try {
+    return await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("exit", (code, signal) => {
+        // A signal death must not read as success: report 128+n, the shell
+        // convention (code is null in that case).
+        if (signal) resolve(128 + (os.constants.signals[signal] ?? 1));
+        else resolve(code ?? 0);
+      });
+    });
+  } finally {
+    process.off("SIGINT", parkedSignal);
+    if (platform !== "win32") process.off("SIGQUIT", parkedSignal);
+  }
+}
+
+export async function relayPlainSession({
+  claudeExecutable,
+  claudeArgs,
+  cwd,
+  input,
+  output,
+  errorOutput = process.stderr,
+  // Test seams; production callers rely on the defaults.
+  ptySpawner = PtySession.spawn,
+  plainSpawner = spawn,
+  platform = process.platform,
+  env = process.env,
+}) {
   let session;
   let relay;
   let outputSubscription;
   let resizeHandler;
   let rawModeChanged = false;
+  const dimensions = terminalDimensions();
   try {
-    const dimensions = terminalDimensions();
-    session = PtySession.spawn(claudeExecutable, claudeArgs, {
+    session = ptySpawner(claudeExecutable, claudeArgs, {
       cwd,
-      env: { ...process.env, EFFORT_AUTOPILOT_BROKER_ACTIVE: "1" },
+      env: { ...env, EFFORT_AUTOPILOT_BROKER_ACTIVE: "1" },
       cols: dimensions.cols,
       rows: dimensions.rows,
     });
+  } catch (error) {
+    // node-pty itself cannot spawn (missing/unloadable binding, broken
+    // spawn-helper): degrade to a directly attached child. Claude still
+    // launches; only the broker's transport disappears.
+    errorOutput.write(
+      `Effort Autopilot: terminal transport unavailable (pty-spawn-failed: ${error.message}); Claude runs directly attached.\r\n`,
+    );
+    try {
+      return await runInheritedChild({
+        claudeExecutable,
+        claudeArgs,
+        cwd,
+        plainSpawner,
+        platform,
+        env,
+      });
+    } catch (spawnError) {
+      errorOutput.write(`Effort Autopilot: could not start Claude (${spawnError.message}).\r\n`);
+      return 1;
+    }
+  }
+  try {
     outputSubscription = session.child.onData((data) => output.write(data));
     relay = new PtyInputRelay({ input, write: (chunk) => session.write(chunk) });
     if (typeof input.setRawMode === "function") {

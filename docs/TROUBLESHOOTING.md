@@ -18,7 +18,7 @@ This is correct fail-open behavior when the cause is one of:
 - `ambiguous-terminal-state`
 - `effort-not-acknowledged`
 
-The task is forwarded once at Claude's current/default/user-selected effort and status must say `outcome=unchanged`. It must not retry or route through the legacy launcher. (A `broker-setup-failed` notice is not a turn cause — it is launch-level; see the next section.)
+The task is forwarded once at Claude's current/default/user-selected effort and status must say `outcome=unchanged`. It must not retry or route through the legacy launcher. (A `broker-setup-failed` or `pty-spawn-failed` notice is not a turn cause — those are launch-level; see their sections below.)
 
 ## Automatic effort is disabled for this launch (broker-setup-failed)
 
@@ -28,16 +28,24 @@ A broker setup step failed after launch (for example the temporary settings writ
 
 Fixed on 2026-08-23 (issue #18): the IPC socket path exceeded the 104-byte macOS `sun_path` limit, so `bind()` silently truncated it and the later `chmod` failed. The endpoint basename is now short (`ea-<pid>-<hex>.sock`), the byte length is guarded explicitly (`ipc-endpoint-too-long` instead of silent truncation), and a post-listen failure closes the server instead of hanging the test runner. If you still see this, you are on an older checkout — update.
 
-## macOS: `posix_spawnp failed` (the launch aborts, or the ConPTY test fails)
+## macOS: `posix_spawnp failed` (the ConPTY test fails, or an older checkout aborts the launch)
 
-`node-pty` on macOS executes a small `spawn-helper` binary shipped prebuilt inside its package; `posix_spawnp failed` means the OS refused to execute it. Verified on real hardware (2026-08-23, pnpm v11.1.1, darwin-arm64): installing dependencies with pnpm can drop the helper's execute bit (`-rw-r--r--` instead of `-rwxr-xr-x`) while `pty.node` still loads fine, because `require()` only needs read permission. The fix is one command, then re-run:
+`node-pty` on macOS executes a small `spawn-helper` binary shipped prebuilt inside its package; `posix_spawnp failed` means the OS refused to execute it. Verified on real hardware (2026-08-23, pnpm v11.1.1, darwin-arm64): installing dependencies with pnpm can drop the helper's execute bit (`-rw-r--r--` instead of `-rwxr-xr-x`) while `pty.node` still loads fine, because `require()` only needs read permission.
+
+The broker now repairs this automatically at launch (a one-line notice reports the repaired path), so a live launch self-heals. The manual fix — for older checkouts, for making `npm test` pass without launching the broker first, or when the automatic repair reports a permission failure — is:
 
 ```zsh
 chmod +x node_modules/.pnpm/node-pty@*/node_modules/node-pty/prebuilds/*/spawn-helper   # pnpm layout
 chmod +x node_modules/node-pty/prebuilds/*/spawn-helper                                  # npm layout
 ```
 
-Note that `pnpm rebuild node-pty` does NOT fix this: node-pty's install script short-circuits without compiling whenever its shipped prebuilds exist. Product-level automation of this repair is tracked in issue #26.
+(If node-pty was compiled from source, the helper lives in `.../node-pty/build/Release/` instead; the broker's `failed` notice prints the exact detected paths.)
+
+Note that `pnpm rebuild node-pty` does NOT fix this: node-pty's install script short-circuits without compiling whenever its shipped prebuilds exist.
+
+## Claude runs but the notice says `pty-spawn-failed` / "directly attached"
+
+node-pty could not spawn at all (missing or unloadable native binding, a helper the automatic repair could not fix). The broker degraded to its last-resort mode: Claude attached directly to your real terminal — fully usable, prompt untouched, but with no automatic effort for that launch. The parenthesized cause is prompt-free; it may include local file paths, so redact your username before sharing. Fix the underlying node-pty install (see the `posix_spawnp` entry above, or reinstall dependencies) to get the broker back.
 
 ## The broker raised my effort to high and I didn't ask
 

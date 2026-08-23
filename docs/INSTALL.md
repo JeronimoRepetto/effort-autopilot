@@ -20,7 +20,7 @@ Non-interactive automation can pass `--yes --policy manual-wins|autopilot-wins`.
 
 ### Installing dependencies with pnpm
 
-The repository's canonical lockfile is npm's `package-lock.json`, but running the checkout with pnpm works, with one known macOS caveat: pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper`, which makes every launch and the PTY test die with `posix_spawnp failed`. The one-line fix is in [Troubleshooting](TROUBLESHOOTING.md).
+The repository's canonical lockfile is npm's `package-lock.json`, but running the checkout with pnpm works. One known macOS caveat: pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper` (`posix_spawnp failed`). The broker repairs that automatically at launch with a visible notice (under pnpm the file is hard-linked from the shared store, so the repair benignly fixes the store copy too); running `npm test` before any launch still needs the one-line manual fix in [Troubleshooting](TROUBLESHOOTING.md).
 
 ## Uninstall / status / policy
 
@@ -59,6 +59,7 @@ disables the broker for that project (Claude runs completely unchanged, with a v
 - If resolution ever loops back to the shim, a recursion guard aborts with a clear error instead of looping.
 - Launch shapes the broker cannot handle safely (`--print`, `--resume`/`--continue`, an uncombinable `--settings`, project opt-out) run Claude completely unchanged with a visible notice.
 - A broker setup failure after launch (for example the local IPC server) does the same: a visible `broker-setup-failed` notice and Claude running completely unchanged with your original arguments — never an aborted launch.
+- If the PTY transport itself cannot start (a broken node-pty install), the launch degrades once more (`pty-spawn-failed`): Claude runs directly attached to your real terminal, fully usable, with no broker features for that launch.
 
 ## Optional: local multilingual mini-AI
 
@@ -79,4 +80,4 @@ On Claude Code 2.1.238, every `/effort` change except `max` also saves that leve
 | --- | --- |
 | Windows 10/11 | Verified live (development machine) |
 | Linux | Implemented; verified via WSL only |
-| macOS | Implemented; **hardware verification in progress**. The 2026-08-23 hardware runs surfaced and confirmed three issues: an IPC socket-path overflow and a broker-startup abort (both fixed in code and re-verified — the live IPC and PTY tests now pass on hardware) and a pnpm-specific missing execute bit on node-pty's prebuilt helper (documented workaround in [Troubleshooting](TROUBLESHOOTING.md)). The 4 platform-simulation test failures are fixed in code (issue #24); still open: the hardware re-run of the suite and the full live-launch proof |
+| macOS | Implemented; **hardware verification in progress**. The 2026-08-23 hardware runs surfaced and confirmed three issues: an IPC socket-path overflow and a broker-startup abort (both fixed in code and re-verified — the live IPC and PTY tests now pass on hardware) and a pnpm-specific missing execute bit on node-pty's prebuilt helper (now auto-repaired at launch; manual command in [Troubleshooting](TROUBLESHOOTING.md) for running tests before any launch). The 4 platform-simulation test failures are fixed in code (issue #24); still open: the hardware re-run of the suite and the full live-launch proof |
