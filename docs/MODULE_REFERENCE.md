@@ -20,7 +20,7 @@
 | [`src/broker/turn-controller.js`](../src/broker/turn-controller.js) | User override precedence, fail-open causes, autopilot-wins uncertainty floor, acknowledgement, exact-once forwarding, prompt-free status |
 | [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, session/model state incl. standing-manual tracking and post-applied level refresh |
 | [`src/broker/replay-authorizations.js`](../src/broker/replay-authorizations.js) | Expiring session-bound prompt-digest authorizations, held only in memory and consumed once |
-| [`src/broker/ipc.js`](../src/broker/ipc.js) | Random authenticated Windows named-pipe/Unix-socket bridge with bounded messages |
+| [`src/broker/ipc.js`](../src/broker/ipc.js) | Random authenticated Windows named-pipe/Unix-socket bridge with bounded messages; short socket basenames with an explicit `sun_path` length guard and close-on-error after listen |
 | [`src/broker/hook-client.js`](../src/broker/hook-client.js) | Claude hook JSON adapter and visible no-change fail-open warning |
 | [`src/broker/pty-session.js`](../src/broker/pty-session.js) | ConPTY/PTY transport, effort acknowledgement normalization, exact replay |
 | [`src/broker/input-relay.js`](../src/broker/input-relay.js) | Byte-transparent stdin pause/resume during the routing window |
@@ -37,7 +37,7 @@
 | [`src/installer/shim.js`](../src/installer/shim.js) | Windows `.cmd` and POSIX shell shim contents |
 | [`src/installer/installer.js`](../src/installer/installer.js) | Consent-gated install/uninstall/status/policy with raw-registry PATH handling and backups |
 | [`bin/effort-autopilot-cli.js`](../bin/effort-autopilot-cli.js) | Public installer CLI entrypoint (install, uninstall, status, policy, ml-setup) |
-| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing (chooses the autopilot-wins `high` uncertainty floor), observer wiring, passthrough fallback, crash cleanup |
+| [`src/broker/interactive.js`](../src/broker/interactive.js) | Interactive lifecycle: settings merge, session effort pin, real CLI PTY, local IPC, routing (chooses the autopilot-wins `high` uncertainty floor), observer wiring, passthrough fallback, fail-open on broker setup failure (`broker-setup-failed` → unchanged Claude with original args), crash cleanup |
 | [`bin/internal-effort-autopilot-hook.js`](../bin/internal-effort-autopilot-hook.js) | Internal hook process used by the POC; not a package binary |
 | [`bin/internal-interactive-broker.js`](../bin/internal-interactive-broker.js) | Internal interactive broker entrypoint used only by the isolated test shell |
 | [`scripts/verify-hybrid-broker-no-inference.mjs`](../scripts/verify-hybrid-broker-no-inference.mjs) | Installed-CLI diagnostic with an independent always-block safety hook |
@@ -79,7 +79,8 @@
 | [`test/broker-turn.test.js`](../test/broker-turn.test.js) | Applied/unchanged outcomes, every fail-open cause, the uncertainty floor (applied, respected, met, clamped, unacknowledged), override precedence, timeout, exact-once, privacy |
 | [`test/broker-pty.test.js`](../test/broker-pty.test.js) | Synthetic ConPTY command acknowledgement and forward ordering |
 | [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens, floor routing and standing-manual state |
-| [`test/broker-ipc.test.js`](../test/broker-ipc.test.js) | Token-authenticated local IPC, fail-open, prompt-free hook status |
+| [`test/broker-ipc.test.js`](../test/broker-ipc.test.js) | Token-authenticated local IPC, fail-open, prompt-free hook status, the `sun_path` endpoint-length guard, and close-on-error after listen |
+| [`test/broker-setup-failopen.test.js`](../test/broker-setup-failopen.test.js) | Broker setup failure degrades to an unchanged Claude launch: original arguments, visible prompt-free cause, artifact cleanup, hard preconditions preserved |
 | [`test/broker-input-relay.test.js`](../test/broker-input-relay.test.js) | Routing pause with exact permission/paste/Unicode/cancellation byte preservation |
 | [`test/broker-launch.test.js`](../test/broker-launch.test.js) | Launch-argument facts, additive `--settings` hook merge, and session effort baseline resolution |
 | [`test/pty-effort-dialog.test.js`](../test/pty-effort-dialog.test.js) | Escalation-confirmation dialog handling and modal dismissal before fail-open reinjection |

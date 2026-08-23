@@ -32,8 +32,9 @@ The broker never changes provider/model and never sends a classification request
 | `src/core` effort ladder/vocabulary/plan (`effort-ladder.js`, `host-effort-vocabulary.js`, `execution-plan.js`) | Implemented: single canonical ladder, per-host vocabulary as data (Claude Code only), pre-call plan resolution |
 | `src/broker/turn-controller.js` | Implemented fail-open/exact-once contract, incl. the autopilot-wins uncertainty floor |
 | `src/broker/hybrid-coordinator.js` | Hook block, ticket routing, one-use replay implemented |
-| `src/broker/ipc.js` / `hook-client.js` | Authenticated local named-pipe hook bridge implemented |
+| `src/broker/ipc.js` / `hook-client.js` | Authenticated local named-pipe/Unix-socket hook bridge implemented, with an explicit `sun_path` length guard and close-on-error after listen |
 | `src/broker/pty-session.js` | Windows ConPTY transport and ANSI-normalized acknowledgement implemented |
+| `src/broker/interactive.js` setup fail-open | Implemented: any broker setup failure cleans up and degrades to an unchanged Claude launch (`broker-setup-failed`) |
 | Stock TUI semantic state detector | Resolved by `UserPromptSubmit`; no TUI-byte guessing |
 | `/effort` local command/ack | Installed CLI verified at `max`, zero inference |
 | `src/gateway/request-transform.js` | Synthetic supported-protocol proof only |
@@ -74,7 +75,7 @@ sequenceDiagram
     end
 ```
 
-Both branches are unit-tested, proven zero-inference against the installed TUI, and live-validated in user-authorized runs (applied low and xhigh — including the mid-conversation escalation confirmation dialog — plus fail-open and manual precedence). The stock UI visibly renders the first block; the hook API cannot make that interruption silent.
+Both branches are unit-tested, proven zero-inference against the installed TUI, and live-validated in user-authorized runs (applied low and xhigh — including the mid-conversation escalation confirmation dialog — plus fail-open and manual precedence). A third, launch-level branch exists before any turn: if broker setup itself fails (temporary settings, IPC server), the launch cleans up and degrades to an unchanged plain session with a visible `broker-setup-failed` cause (unit-tested, issue #19). The stock UI visibly renders the first block; the hook API cannot make that interruption silent.
 
 While routing, the broker pauses its stdin relay rather than parsing keystrokes. Permission answers, bracketed paste, Unicode, multiline bytes, and cancellation controls are forwarded unchanged after routing. The relay is wired into the packaged runtime, installed globally by the reversible installer ([INSTALL.md](INSTALL.md)).
 
@@ -108,4 +109,4 @@ Explicit effort sources outrank automation under `manual-wins`; under `autopilot
 
 ## Platform notes
 
-Windows uses ConPTY through Microsoft's MIT-licensed `node-pty`. macOS/Linux can use the same library over Unix PTYs. Only Windows has been exercised against the installed CLI; cross-platform terminal submission and acknowledgement sequences still require equivalent zero-inference verification.
+Windows uses ConPTY through Microsoft's MIT-licensed `node-pty`. macOS/Linux can use the same library over Unix PTYs. Windows is fully exercised against the installed CLI; a first macOS hardware run (2026-08-23) exercised launch and IPC startup — surfacing the socket-path and startup fail-open fixes — but cross-platform terminal submission and acknowledgement sequences still require equivalent zero-inference verification.

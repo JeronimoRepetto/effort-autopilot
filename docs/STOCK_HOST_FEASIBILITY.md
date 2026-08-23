@@ -1,6 +1,6 @@
 # Stock Claude Code CLI feasibility audit
 
-Audit date: 2026-08-21  
+Audit date: 2026-08-21 (last updated: 2026-08-23)  
 Installed Claude Code: 2.1.238  
 Current product scope: stock Claude Code **CLI only**
 
@@ -177,7 +177,7 @@ Explicit user effort always wins under `manual-wins`. Unsupported/ambiguous mode
 
 After `/effort` is sent, loss of its acknowledgement cannot prove it had no side effect. The contract therefore reports unchanged and forwards once without claiming an application; it does not send another effort command. The installed proof demonstrates the positive acknowledgement path, not every terminal failure mode.
 
-If broker IPC is unavailable, the hook returns a prompt-free `systemMessage` that automatic effort was unchanged and otherwise allows the original submission. No block/replay occurs in that case. This is the strongest documented visible fail-open behavior without adding model context.
+If broker IPC is unavailable, the hook returns a prompt-free `systemMessage` that automatic effort was unchanged and otherwise allows the original submission. No block/replay occurs in that case. Separately, if the IPC server cannot even start during broker launch, no hook settings are injected at all: the launch itself degrades to an unchanged plain session with a visible `broker-setup-failed` cause (issue #19). This is the strongest documented visible fail-open behavior without adding model context.
 
 ## Other legitimate local-control architectures
 
@@ -198,8 +198,8 @@ If broker IPC is unavailable, the hook returns a prompt-free `systemMessage` tha
 
 - **Transparent CLI mechanism:** the hook/ConPTY hybrid is technically feasible and preserves the same stock session with no preliminary model call.
 - **Truthful UX:** the first hook block is visibly rendered; the current API cannot make it silent.
-- **Shipped:** the reversible global installer, live prompt proofs, mid-session model ambiguity marking, explicit-user-effort tracking (terminal acknowledgement observer plus `--effort` flag precedence), user `--settings` merging with a visible passthrough fallback, runtime input-relay wiring, and crash cleanup — implemented and covered by local tests plus a zero-inference installed-CLI harness. The `--effort` spawn pin is kept only for known-starting-level tracking; it does not scope anything (see the persistence rule above).
-- **Remaining release blocker:** macOS verification on real hardware (Linux is WSL-verified).
+- **Shipped:** the reversible global installer, live prompt proofs, mid-session model ambiguity marking, explicit-user-effort tracking (terminal acknowledgement observer plus `--effort` flag precedence), user `--settings` merging with a visible passthrough fallback, runtime input-relay wiring, broker-startup fail-open (a setup failure degrades to an unchanged plain session with a visible `broker-setup-failed` cause), and crash cleanup — implemented and covered by local tests plus a zero-inference installed-CLI harness. The `--effort` spawn pin is kept only for known-starting-level tracking; it does not scope anything (see the persistence rule above).
+- **Remaining release blocker:** macOS verification on real hardware (Linux is WSL-verified). A first macOS hardware run (2026-08-23) surfaced an IPC socket-path overflow past the 104-byte `sun_path` limit (issue #18) and a broker-startup failure that aborted the launch instead of failing open (issue #19); both are fixed and regression-tested — the socket basename is short and length-guarded, and any broker setup failure now degrades to an unchanged Claude session with a visible `broker-setup-failed` cause. Hardware re-verification is pending.
 - **Live boundary:** user-authorized live prompts on 2026-08-21 covered every branch that existed on that date; the autopilot-wins uncertainty floor (added 2026-08-22, issue #2) is unit-tested only, never live-proven. Fail-open: a deliberately trivial prompt classified below the confidence floor (0.37), visibly forwarded once unchanged with one model response (observed under `manual-wins`; under `autopilot-wins` that same prompt would now be floored at `high`). Applied: `applied low` on a first prompt, and `applied xhigh` mid-conversation through the CLI's escalation confirmation dialog, each with exactly one authorized replay and one model response. Manual precedence: an observed `/effort` choice passed prompts through directly. The live calibration benchmark remains separately gated.
 - **Current code:** the shipped hybrid broker with installer, the synthetic gateway transform, classifier plus inactive learned-classifier stack, and internal benchmarks — tagged `v0.3.0-beta.1` and released on GitHub as a pre-release; npm publication remains gated on the release checklist.
 

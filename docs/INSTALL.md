@@ -54,6 +54,7 @@ disables the broker for that project (Claude runs completely unchanged, with a v
 - The shim never freezes the real Claude path: on every launch the broker resolves `claude` again and skips its own shim directory, so Claude updates keep working.
 - If resolution ever loops back to the shim, a recursion guard aborts with a clear error instead of looping.
 - Launch shapes the broker cannot handle safely (`--print`, `--resume`/`--continue`, an uncombinable `--settings`, project opt-out) run Claude completely unchanged with a visible notice.
+- A broker setup failure after launch (for example the local IPC server) does the same: a visible `broker-setup-failed` notice and Claude running completely unchanged with your original arguments — never an aborted launch.
 
 ## Optional: local multilingual mini-AI
 
@@ -74,4 +75,4 @@ On Claude Code 2.1.238, every `/effort` change except `max` also saves that leve
 | --- | --- |
 | Windows 10/11 | Verified live (development machine) |
 | Linux | Implemented; verified via WSL only |
-| macOS | Implemented; **not yet verified on real hardware** — the installer warns |
+| macOS | Implemented; **not yet fully verified on real hardware** — the installer warns. A first hardware run (2026-08-23) surfaced an IPC socket-path overflow and a broker-startup abort; both are fixed and regression-tested, re-verification pending |

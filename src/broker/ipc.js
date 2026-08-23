@@ -7,13 +7,23 @@ import process from "node:process";
 
 const MAX_MESSAGE_BYTES = 1024 * 1024 + 16 * 1024;
 
-export function createIpcIdentity() {
-  const id = randomUUID();
+// POSIX sockaddr_un.sun_path holds 104 bytes on macOS (103 usable, the
+// smallest common limit; Linux allows 108). Exceeding it makes bind() silently
+// truncate the path, which surfaces one call later as a misleading ENOENT
+// (issue #18) — so the byte length is guarded explicitly and the basename is
+// kept short: macOS's per-user $TMPDIR alone is ~49 characters.
+const MAX_SUN_PATH_BYTES = 103;
+
+export function createIpcIdentity({
+  platform = process.platform,
+  tmpdir = os.tmpdir(),
+  pid = process.pid,
+} = {}) {
   return Object.freeze({
     endpoint:
-      process.platform === "win32"
-        ? `\\\\.\\pipe\\effort-autopilot-${process.pid}-${id}`
-        : path.join(os.tmpdir(), `effort-autopilot-${process.pid}-${id}.sock`),
+      platform === "win32"
+        ? `\\\\.\\pipe\\effort-autopilot-${pid}-${randomUUID()}`
+        : path.posix.join(tmpdir, `ea-${pid}-${randomBytes(4).toString("hex")}.sock`),
     token: randomBytes(32).toString("base64url"),
   });
 }
@@ -57,9 +67,19 @@ export async function startBrokerIpcServer({
   coordinator,
   onBlocked,
   onDecision,
+  // Test seams; production callers rely on the defaults.
+  platform = process.platform,
+  fsOps = { chmod, rm },
 }) {
   if (!endpoint || !token || !coordinator) throw new TypeError("missing IPC server option");
-  if (process.platform !== "win32") await rm(endpoint, { force: true });
+  if (platform !== "win32") {
+    if (Buffer.byteLength(endpoint) > MAX_SUN_PATH_BYTES) {
+      throw new Error(
+        `ipc-endpoint-too-long: the socket path exceeds the ${MAX_SUN_PATH_BYTES}-byte sun_path limit`,
+      );
+    }
+    await fsOps.rm(endpoint, { force: true });
+  }
 
   const server = net.createServer((socket) => {
     let raw = Buffer.alloc(0);
@@ -103,7 +123,15 @@ export async function startBrokerIpcServer({
     server.once("error", reject);
     server.listen(endpoint, resolve);
   });
-  if (process.platform !== "win32") await chmod(endpoint, 0o600);
+  // A failure after listen() must never leak the listening handle (it keeps
+  // the event loop — and the test runner — alive forever) or the socket file.
+  try {
+    if (platform !== "win32") await fsOps.chmod(endpoint, 0o600);
+  } catch (error) {
+    await new Promise((resolve) => server.close(() => resolve()));
+    if (platform !== "win32") await fsOps.rm(endpoint, { force: true }).catch(() => {});
+    throw error;
+  }
 
   return Object.freeze({
     endpoint,
@@ -111,7 +139,7 @@ export async function startBrokerIpcServer({
       await new Promise((resolve, reject) =>
         server.close((error) => (error ? reject(error) : resolve())),
       );
-      if (process.platform !== "win32") await rm(endpoint, { force: true });
+      if (platform !== "win32") await fsOps.rm(endpoint, { force: true });
     },
   });
 }
