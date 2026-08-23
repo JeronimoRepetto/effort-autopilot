@@ -11,6 +11,8 @@ npm test
 npm run broker:poc:test
 ```
 
+Line endings are pinned by `.gitattributes` (LF for source/docs, CRLF only for PowerShell), so checkouts match Prettier's `endOfLine: "lf"` on every platform regardless of `core.autocrlf` — `npm run format:check` passes on a fresh clone.
+
 npm's `package-lock.json` is this repo's canonical lockfile — do not commit other managers' lockfiles or workspace artifacts (they are git-ignored). Running the checkout with pnpm works (verified 2026-08-23: the full suite runs under pnpm v11), with one known macOS caveat — pnpm can drop the execute bit on node-pty's prebuilt `spawn-helper` (`posix_spawnp failed`). The broker repairs it automatically at launch; running `npm test` before any launch still needs the one-line fix in [Troubleshooting](TROUBLESHOOTING.md).
 
 `node-pty` 1.1.0 supplies Windows ConPTY and Unix PTY bindings for the broker. It is MIT licensed. The package is marked `private` (unpublished) and exposes exactly one executable: the reversible installer CLI (`effort-autopilot` → `bin/effort-autopilot-cli.js`, see [Installation](INSTALL.md)). No script permanently replaces or renames the real `claude` executable; publication requires the [release checklist](RELEASE_CHECKLIST.md).

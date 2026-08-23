@@ -1,0 +1,15 @@
+# Deterministic line endings (issue #27): with core.autocrlf=true (a common
+# Windows default) checkouts produced CRLF while Prettier's endOfLine "lf"
+# expects LF, so `npm run format:check` failed on fresh clones even though
+# `git diff` was empty. Declaring LF here makes every checkout match Prettier
+# on every platform.
+* text=auto
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+# PowerShell is the one conventional-CRLF script in the repo.
+*.ps1 text eol=crlf
