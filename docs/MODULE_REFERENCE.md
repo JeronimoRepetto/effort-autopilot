@@ -30,9 +30,9 @@
 | [`src/broker/session-observer.js`](../src/broker/session-observer.js) | Terminal acknowledgement watcher for manual `/effort` precedence and `/model` ambiguity marking |
 | [`src/broker/session-policy.js`](../src/broker/session-policy.js) | `manual-wins`/`autopilot-wins` precedence policy, known-active-level tracking for the same-level skip, and standing-manual-choice mirroring for the uncertainty floor |
 | [`src/broker/messages.js`](../src/broker/messages.js) | Prompt-language–localized status messages (English default, Spanish on clear evidence); cause codes stay untranslated |
-| [`src/broker/install-paths.js`](../src/broker/install-paths.js) | Canonical per-platform install root, shim, config, and backup locations |
+| [`src/broker/install-paths.js`](../src/broker/install-paths.js) | Canonical per-platform install root, shim, config, and backup locations; every helper honors its `platform` parameter for path semantics too, so cross-platform simulations produce the target platform's exact separators |
 | [`src/broker/project-config.js`](../src/broker/project-config.js) | Per-project `.effort-autopilot.json`, global install config, and the policy resolution chain |
-| [`src/broker/claude-locator.js`](../src/broker/claude-locator.js) | Real-Claude resolution that skips the shim directory on every launch |
+| [`src/broker/claude-locator.js`](../src/broker/claude-locator.js) | Real-Claude resolution that skips the shim directory on every launch; candidate parsing follows the `platform` parameter (win32 vs posix path semantics) |
 | [`src/installer/path-edit.js`](../src/installer/path-edit.js) | Pure, reversible PATH-entry and shell-profile-block transformations |
 | [`src/installer/shim.js`](../src/installer/shim.js) | Windows `.cmd` and POSIX shell shim contents |
 | [`src/installer/installer.js`](../src/installer/installer.js) | Consent-gated install/uninstall/status/policy with raw-registry PATH handling and backups |
@@ -86,7 +86,7 @@
 | [`test/pty-effort-dialog.test.js`](../test/pty-effort-dialog.test.js) | Escalation-confirmation dialog handling and modal dismissal before fail-open reinjection |
 | [`test/session-policy.test.js`](../test/session-policy.test.js) | `manual-wins`/`autopilot-wins` precedence, `/effort auto` handback, launch-flag latching, same-level skip, standing-manual mirroring |
 | [`test/messages.test.js`](../test/messages.test.js) | Language detection defaults and untranslated cause codes in both catalogs |
-| [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain |
+| [`test/installer.test.js`](../test/installer.test.js) | Install paths, PATH/profile edits, shim contents, shim-skip selection, project/global config, policy chain; exact-equality platform-simulation assertions are the issue-#24 regression guard |
 | [`test/ordinal-head.test.js`](../test/ordinal-head.test.js) | Artifact validation, probability sanity, tier monotonicity, synthetic training convergence and determinism |
 | [`test/learned-classifier.test.js`](../test/learned-classifier.test.js) | Decision-contract fidelity, profile clamping, and the full deterministic fallback chain with fake embedders |
 | [`test/calibration.test.js`](../test/calibration.test.js) | Adaptive search correctness, boundary repeats, resume idempotence, budget/limit stops, dataset export, baseline honesty |

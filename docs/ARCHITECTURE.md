@@ -109,4 +109,4 @@ Explicit effort sources outrank automation under `manual-wins`; under `autopilot
 
 ## Platform notes
 
-Windows uses ConPTY through Microsoft's MIT-licensed `node-pty`. macOS/Linux can use the same library over Unix PTYs. Windows is fully exercised against the installed CLI; a first macOS hardware run (2026-08-23) exercised launch and IPC startup — surfacing the socket-path and startup fail-open fixes — but cross-platform terminal submission and acknowledgement sequences still require equivalent zero-inference verification.
+Windows uses ConPTY through Microsoft's MIT-licensed `node-pty`. macOS/Linux can use the same library over Unix PTYs. Windows is fully exercised against the installed CLI; a first macOS hardware run (2026-08-23) exercised launch and IPC startup — surfacing the socket-path and startup fail-open fixes, plus platform-simulation test failures from path helpers that ignored their `platform` parameter (fixed, issue #24) — but cross-platform terminal submission and acknowledgement sequences still require equivalent zero-inference verification.

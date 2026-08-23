@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
 
 import { parseClaudeLaunchArgs } from "../src/broker/claude-args.js";
@@ -95,26 +96,32 @@ test("hook merge refuses shapes it cannot combine without guessing", () => {
 });
 
 test("session effort baseline prefers project-local, then project, then user settings", () => {
+  // resolveSessionEffortBaseline joins with the host's own path module, so
+  // the fixture keys must be built the same way to stay portable (issue #24).
+  const cwd = "C:\\proj";
+  const home = "C:\\home";
+  const projectLocal = path.join(cwd, ".claude", "settings.local.json");
+  const project = path.join(cwd, ".claude", "settings.json");
   const files = {
-    "C:\\proj\\.claude\\settings.local.json": JSON.stringify({ effortLevel: "low" }),
-    "C:\\proj\\.claude\\settings.json": JSON.stringify({ effortLevel: "max" }),
-    "C:\\home\\.claude\\settings.json": JSON.stringify({ effortLevel: "high" }),
+    [projectLocal]: JSON.stringify({ effortLevel: "low" }),
+    [project]: JSON.stringify({ effortLevel: "max" }),
+    [path.join(home, ".claude", "settings.json")]: JSON.stringify({ effortLevel: "high" }),
   };
   const readFile = (file) => {
     if (!(file in files)) throw new Error("ENOENT");
     return files[file];
   };
-  const options = { cwd: "C:\\proj", home: "C:\\home", readFile };
+  const options = { cwd, home, readFile };
   assert.deepEqual(resolveSessionEffortBaseline(options), {
     effort: "low",
     source: "project local settings",
   });
-  delete files["C:\\proj\\.claude\\settings.local.json"];
+  delete files[projectLocal];
   assert.deepEqual(resolveSessionEffortBaseline(options), {
     effort: "max",
     source: "project settings",
   });
-  delete files["C:\\proj\\.claude\\settings.json"];
+  delete files[project];
   assert.deepEqual(resolveSessionEffortBaseline(options), {
     effort: "high",
     source: "user settings",
