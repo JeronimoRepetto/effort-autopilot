@@ -6,18 +6,21 @@ The repository includes a provider-neutral instruction and Agent Skills harness 
 
 `AGENTS.md` is the canonical project guide for every coding-agent provider. It contains the product invariants that must always be visible, the work and documentation gates, the skill catalog, metadata-generated auto-invoke routing, and the delegation boundary.
 
-`CLAUDE.md` is a Claude Code entrypoint that imports `AGENTS.md` and adds only Claude-specific discovery notes. It must not become a second copy of the project contract. A policy change belongs in `AGENTS.md`; provider-only behavior belongs in the provider entrypoint.
+`CLAUDE.md` and `GEMINI.md` are thin provider entrypoints that import `AGENTS.md` and add only provider-specific discovery notes. They must not become copies of the project contract. A policy change belongs in `AGENTS.md`; provider-only behavior belongs in the matching entrypoint.
 
-The harness currently maintains these two committed instruction surfaces. It does not install provider-specific symlinks, user configuration, custom subagent profiles, or runtime-host support.
+The harness maintains all three committed instruction surfaces without installing symlinks, user configuration, custom subagent profiles, or runtime-host support.
 
-## Two different skill sets
+## Canonical and generated skill surfaces
 
 | Path | Responsibility |
 | --- | --- |
-| `agent-skills/` | Development guidance for agents working on this repository |
+| `agent-skills/` | Only editable source for development Agent Skill instructions |
+| `.agents/skills/` | Generated Codex/open-standard discovery indexes |
+| `.claude/skills/` | Generated Claude Code discovery indexes |
+| `.gemini/skills/` | Generated Gemini CLI discovery indexes |
 | `skills/route-*/` | Historical manual Claude plugin fixtures that represent six routing outcomes |
 
-The route skills remain manual-only and do not classify a prompt, apply effort automatically, or teach an agent how to modify the repository. The development synchronizer scans only `agent-skills/*/SKILL.md`.
+Every generated provider `SKILL.md` contains discovery metadata plus a link to its matching canonical `agent-skills/<name>/SKILL.md`; it does not duplicate the canonical instructions. The route skills remain manual-only and do not classify a prompt, apply effort automatically, or teach an agent how to modify the repository. The development synchronizer scans only canonical `agent-skills/*/SKILL.md` files.
 
 ## Skill metadata
 
@@ -49,15 +52,21 @@ npm run skills:sync
 npm run skills:check
 ```
 
-`skills:sync` validates every development skill and replaces only the block bounded by `<!-- skill-sync:start -->` and `<!-- skill-sync:end -->` in each registered target. Rows are sorted deterministically by action and skill.
+`skills:sync` validates every canonical development skill, replaces only the block bounded by `<!-- skill-sync:start -->` and `<!-- skill-sync:end -->` in each registered instruction target, creates missing provider directories, and writes deterministic native-discovery indexes. Rows and provider indexes are sorted deterministically, and unrelated files under provider directories are left untouched.
 
-`skills:check` performs the same validation without writing and exits nonzero when generated content has drifted. For review without mutation:
+`skills:check` performs the same validation without writing and exits nonzero when routing or any expected provider index has drifted. For review without mutation:
 
 ```powershell
 node agent-skills/skill-sync/scripts/sync.mjs --dry-run
 ```
 
-The Node implementation is shared by Windows and POSIX and does not require symlinks. Normal `npm test` includes metadata, parsing, deterministic rendering, dry-run, idempotence, canonical-instruction, and drift tests.
+The Node implementation is shared by Windows and POSIX and does not require symlinks. Normal `npm test` includes metadata, parsing, deterministic rendering, dry-run, idempotence, canonical-instruction, provider-entrypoint, index-redirect, and drift tests.
+
+## Loading and refreshing
+
+The generated directories are committed, so a contributor does not run an installer after cloning or pulling. Start the coding agent at or below the repository root. Codex discovers `.agents/skills/`; Claude Code discovers `.claude/skills/`; Gemini CLI discovers `.gemini/skills/` and also recognizes `.agents/skills/`.
+
+When a top-level provider directory is created after an agent session has already started, restart that session if the new skills do not appear. Gemini CLI can rescan with `/skills reload` and refresh `GEMINI.md` context with `/memory reload`. `npm run skills:sync` is a maintainer command for canonical skill changes, not an end-user installation step.
 
 ## Delegation boundary
 
