@@ -55,6 +55,7 @@ test("documentation index covers every focused guide", () => {
     "PLUGIN.md",
     "SECURITY.md",
     "DEVELOPMENT.md",
+    "AGENT_HARNESS.md",
     "TROUBLESHOOTING.md",
     "MODULE_REFERENCE.md",
     "HOST_ADAPTERS.md",

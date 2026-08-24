@@ -33,7 +33,7 @@ Everything visible is disclosed in-terminal (which effort was applied and why, o
 - Full interactive broker on Windows (ConPTY), validated live: automatic escalation (including the CLI's mid-conversation confirmation dialog, auto-confirmed), fail-open branches, manual-precedence, per-project opt-out.
 - Reversible global installer (`install` / `uninstall` / `status` / `policy` / `ml-setup`), Linux implemented (WSL-verified), macOS implemented (hardware verification in progress: the 2026-08-23 runs surfaced three issues, all now fixed in code — two re-verified on hardware, and the pnpm-specific spawn-helper permission is auto-repaired at launch; the 4 platform-simulation test failures are also fixed in code, hardware re-run pending).
 - The complete mini-AI stack: local multilingual embeddings (optional dependency), trained-artifact loader with a deterministic fallback chain, a dependency-free ordinal trainer (`npm run ml:train`), and the calibration pipeline (`npm run calibrate`).
-- 202 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
+- 209 local non-billable tests; a zero-inference diagnostic proves the whole pipeline against the installed CLI without a single model call.
 
 ### Honest limitations
 
@@ -65,7 +65,7 @@ Two models in cascade, neither trained from scratch: a **frozen, pretrained mult
 git clone https://github.com/JeronimoRepetto/effort-autopilot.git
 cd effort-autopilot
 npm install
-npm test                                   # 202 local tests, no Claude calls
+npm test                                   # 209 local tests, no Claude calls
 node bin/effort-autopilot-cli.js install   # consent-gated, reversible
 # open a NEW terminal, cd into any project, and run: claude
 ```

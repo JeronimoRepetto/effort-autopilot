@@ -73,6 +73,16 @@
 | [`.claude-plugin/plugin.json`](../.claude-plugin/plugin.json) | Manual-only historical skills; no automatic hook |
 | [`skills/`](../skills) | Manual experimental effort skills, not the product |
 
+## Development agent harness
+
+| Path | Responsibility |
+| --- | --- |
+| [`AGENTS.md`](../AGENTS.md) | Provider-neutral project contract, skill routing, work gates, and delegation policy |
+| [`CLAUDE.md`](../CLAUDE.md) | Claude Code entrypoint that imports the canonical `AGENTS.md` rules |
+| [`agent-skills/`](../agent-skills) | Reusable development guidance; separate from the historical manual route skills |
+| [`agent-skills/skill-creator/`](../agent-skills/skill-creator) | Maintained skill structure, metadata rules, and template |
+| [`agent-skills/skill-sync/scripts/sync.mjs`](../agent-skills/skill-sync/scripts/sync.mjs) | Cross-platform metadata validation, deterministic auto-invoke generation, dry-run, and drift check |
+
 ## Tests
 
 | Path | Responsibility |
@@ -98,4 +108,5 @@
 | [`test/documentation.test.js`](../test/documentation.test.js) | Link/index/product-boundary synchronization |
 | [`test/effort-ladder.test.js`](../test/effort-ladder.test.js) | Canonical ladder ordering/helpers, derived user-facing enumeration, host vocabulary mapping |
 | [`test/packaging.test.js`](../test/packaging.test.js) | Tripwires: private/unpublished surface, npmignore exclusions, shipped imports resolve inside the tarball, single ladder definition, plugin/package version sync |
+| [`test/agent-skills.test.js`](../test/agent-skills.test.js) | Development skill metadata, canonical instruction ownership, deterministic sync, dry-run, idempotence, and drift detection |
 | Other `test/*.test.js` | Internal evaluation, packaging scaffolding, and regression coverage |
