@@ -21,7 +21,7 @@ This directory is the detailed reference for Effort Autopilot. The root [README]
 | [Plugin status](PLUGIN.md) | Why the bundled native plugin and skills are manual-only |
 | [Security and privacy](SECURITY.md) | Data inventory, threat model, controls, and residual risks |
 | [Development](DEVELOPMENT.md) | Install, upgrade, uninstall, tests, release checks, and contribution workflow |
-| [Development agent harness](AGENT_HARNESS.md) | Canonical agent instructions, development skills, metadata sync, and delegation boundary |
+| [Development agent harness](AGENT_HARNESS.md) | Canonical agent instructions, provider-native skill indexes, metadata sync, and delegation boundary |
 | [Troubleshooting](TROUBLESHOOTING.md) | Common failures and safe recovery |
 | [Module reference](MODULE_REFERENCE.md) | File-by-file responsibility map |
 | [Host adapters](HOST_ADAPTERS.md) | Contract and checklist for a future Codex or other host adapter |

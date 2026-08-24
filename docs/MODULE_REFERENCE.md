@@ -79,9 +79,13 @@
 | --- | --- |
 | [`AGENTS.md`](../AGENTS.md) | Provider-neutral project contract, skill routing, work gates, and delegation policy |
 | [`CLAUDE.md`](../CLAUDE.md) | Claude Code entrypoint that imports the canonical `AGENTS.md` rules |
-| [`agent-skills/`](../agent-skills) | Reusable development guidance; separate from the historical manual route skills |
+| [`GEMINI.md`](../GEMINI.md) | Gemini CLI entrypoint that imports the canonical `AGENTS.md` rules |
+| [`agent-skills/`](../agent-skills) | Canonical reusable development guidance; separate from historical manual route skills |
+| [`.agents/skills/`](../.agents/skills) | Generated Codex/open-standard indexes that redirect to canonical skills |
+| [`.claude/skills/`](../.claude/skills) | Generated Claude Code indexes that redirect to canonical skills |
+| [`.gemini/skills/`](../.gemini/skills) | Generated Gemini CLI indexes that redirect to canonical skills |
 | [`agent-skills/skill-creator/`](../agent-skills/skill-creator) | Maintained skill structure, metadata rules, and template |
-| [`agent-skills/skill-sync/scripts/sync.mjs`](../agent-skills/skill-sync/scripts/sync.mjs) | Cross-platform metadata validation, deterministic auto-invoke generation, dry-run, and drift check |
+| [`agent-skills/skill-sync/scripts/sync.mjs`](../agent-skills/skill-sync/scripts/sync.mjs) | Cross-platform metadata validation, deterministic auto-invoke and provider-index generation, dry-run, and drift check |
 
 ## Tests
 
@@ -108,5 +112,5 @@
 | [`test/documentation.test.js`](../test/documentation.test.js) | Link/index/product-boundary synchronization |
 | [`test/effort-ladder.test.js`](../test/effort-ladder.test.js) | Canonical ladder ordering/helpers, derived user-facing enumeration, host vocabulary mapping |
 | [`test/packaging.test.js`](../test/packaging.test.js) | Tripwires: private/unpublished surface, npmignore exclusions, shipped imports resolve inside the tarball, single ladder definition, plugin/package version sync |
-| [`test/agent-skills.test.js`](../test/agent-skills.test.js) | Development skill metadata, canonical instruction ownership, deterministic sync, dry-run, idempotence, and drift detection |
+| [`test/agent-skills.test.js`](../test/agent-skills.test.js) | Development skill metadata, canonical instruction ownership, provider indexes and entrypoints, deterministic sync, dry-run, idempotence, and drift detection |
 | Other `test/*.test.js` | Internal evaluation, packaging scaffolding, and regression coverage |

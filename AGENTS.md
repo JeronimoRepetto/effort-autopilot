@@ -8,6 +8,8 @@ Before changing behavior, read [the product contract](docs/PRODUCT.md) and use [
 
 Load the smallest relevant skill before working in its area. The historical `skills/route-*` entries are manual plugin regression fixtures, not development skills.
 
+Canonical skill bodies live only under `agent-skills/`. The `.agents/skills/`, `.claude/skills/`, and `.gemini/skills/` trees are generated discovery indexes; never edit them directly. Run `npm run skills:sync` after changing a canonical skill.
+
 | Skill | Use for |
 | --- | --- |
 | [`effort-autopilot`](agent-skills/effort-autopilot/SKILL.md) | Project overview, navigation, and cross-area planning |
@@ -19,7 +21,7 @@ Load the smallest relevant skill before working in its area. The historical `ski
 | [`effort-testing`](agent-skills/effort-testing/SKILL.md) | Test strategy, regressions, tripwires, and verification |
 | [`effort-docs`](agent-skills/effort-docs/SKILL.md) | Documentation, staleness audits, release claims, and current-state discipline |
 | [`skill-creator`](agent-skills/skill-creator/SKILL.md) | Creating or restructuring repository Agent Skills |
-| [`skill-sync`](agent-skills/skill-sync/SKILL.md) | Regenerating and validating the metadata-driven auto-invoke table |
+| [`skill-sync`](agent-skills/skill-sync/SKILL.md) | Regenerating and validating auto-invoke routing and provider discovery indexes |
 
 <!-- skill-sync:start -->
 ### Auto-invoke skills
@@ -41,7 +43,7 @@ When performing these actions, load the corresponding skill first:
 | Investigating or implementing a runtime host adapter | `effort-host-adapter` |
 | Planning changes that span multiple project areas | `effort-autopilot` |
 | Preparing a behavior change for commit or push | `effort-docs` |
-| Regenerating or checking the AGENTS.md auto-invoke table | `skill-sync` |
+| Regenerating or checking Agent Skill routing or provider indexes | `skill-sync` |
 | Running any live or subscription-using evaluation | `effort-evaluation` |
 | Writing or updating documentation | `effort-docs` |
 <!-- skill-sync:end -->
