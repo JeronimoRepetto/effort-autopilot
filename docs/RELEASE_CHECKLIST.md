@@ -4,13 +4,13 @@ Publication is a deliberate, user-authorized act. Nothing below runs automatical
 
 ## Pre-publication gates
 
-1. Full local suite green (`npm test`) and the installed-CLI zero-inference diagnostic green (`npm run broker:poc:installed-zero-inference`).
+1. Full local suite green (`npm test`), GitHub Actions CI green on the release commit (`.github/workflows/ci.yml`), and the installed-CLI zero-inference diagnostic green (`npm run broker:poc:installed-zero-inference`).
 2. Lint clean (`npm run lint`) and formatting clean (`npm run format:check`).
 3. `npm pack --dry-run` — inspect the file list against the `files` whitelist: only the installer CLI, internal broker entrypoints, `src/broker`, `src/core`, `src/installer`, the public docs, LICENSE, and README. No benchmark payloads, evaluation manifests, legacy launcher, or scripts. (`test/packaging.test.js` already enforces automatically that every shipped module's imports resolve inside the tarball; this manual pass checks presence and extras.)
 4. License review: package MIT; `node-pty` MIT; any bundled or downloaded ML artifact license verified and recorded.
 5. [Security notes](SECURITY.md) reviewed against the shipped surface (installer PATH mutation, shim, IPC, spawn-helper permission preflight, the ComSpec path of the directly-attached degradation, disclosure messages).
 6. README and [INSTALL.md](INSTALL.md) describe only shipped behavior; platform support matrix is current (macOS: the full-suite hardware re-run and live-launch proof are still pending unless proven).
-7. Version bumped intentionally; `git tag` matches; working tree clean and pushed. `.claude-plugin/plugin.json` and `marketplace.json` track the package version (`test/packaging.test.js` enforces plugin ↔ package sync).
+7. Version bumped intentionally; `git tag` matches; working tree clean and pushed. `.claude-plugin/plugin.json` and `marketplace.json` track the package version (`test/packaging.test.js` enforces plugin ↔ package sync), and `package-lock.json`'s two `version` fields match `package.json` — `npm ci` fails otherwise.
 
 ## Publication
 

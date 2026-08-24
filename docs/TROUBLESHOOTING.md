@@ -57,7 +57,7 @@ That is the `autopilot-wins` uncertainty floor, not an error: when classificatio
 
 ## ConPTY test fails on Windows
 
-Run Node.js 20+ on Windows 10/11 with the locally installed `node-pty` 1.1.0 dependency. Re-run `npm install`, then:
+Run Node.js 20.11+ on Windows 10/11 with the locally installed `node-pty` 1.1.0 dependency. Re-run `npm install`, then:
 
 ```powershell
 npm run broker:poc:test

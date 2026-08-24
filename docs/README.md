@@ -20,7 +20,7 @@ This directory is the detailed reference for Effort Autopilot. The root [README]
 | [First live pilot readiness](LIVE_PILOT_READINESS.md) | Exact pinned five-task subset, local verifier checks, model inheritance, and confirmation boundary |
 | [Plugin status](PLUGIN.md) | Why the bundled native plugin and skills are manual-only |
 | [Security and privacy](SECURITY.md) | Data inventory, threat model, controls, and residual risks |
-| [Development](DEVELOPMENT.md) | Install, upgrade, uninstall, tests, release checks, and contribution workflow |
+| [Development](DEVELOPMENT.md) | Install, upgrade, uninstall, tests, continuous integration, release checks, and contribution workflow |
 | [Development agent harness](AGENT_HARNESS.md) | Canonical agent instructions, provider-native skill indexes, metadata sync, and delegation boundary |
 | [Troubleshooting](TROUBLESHOOTING.md) | Common failures and safe recovery |
 | [Module reference](MODULE_REFERENCE.md) | File-by-file responsibility map |
