@@ -1,7 +1,7 @@
 # Stock Claude Code CLI feasibility audit
 
-Audit date: 2026-08-21 (last updated: 2026-08-23)  
-Installed Claude Code: 2.1.238  
+Audit date: 2026-08-21 (last updated: 2026-08-24)  
+Installed Claude Code: 2.1.238 (initial audit); 2.1.241 (task-notification inspection, 2026-08-23)  
 Current product scope: stock Claude Code **CLI only**
 
 The native-hook request is captured in a local [draft upstream capability proposal](UPSTREAM_CAPABILITY_PROPOSAL.md). It has **not** been submitted to Anthropic.
@@ -150,13 +150,17 @@ The first block is not quiet. Stock Claude renders `UserPromptSubmit operation b
 
 1. The broker creates a random 256-bit token and per-process Windows named pipe (Unix socket on other platforms) and passes both only in the child environment.
 2. `SessionStart` registers session ID, cwd, and exact model when present.
-3. First `UserPromptSubmit` sends session ID, `prompt_id`, cwd, and prompt over bounded local IPC and returns `decision: block`.
+3. First `UserPromptSubmit` sends session ID, `prompt_id`, cwd, and prompt over bounded local IPC and, for a user task, returns `decision: block` (host-synthetic task-notification turns are allowed through instead — see below).
 4. The broker classifies locally, applies `/effort`, and requires the normalized exact acknowledgement.
 5. It arms an expiring authorization keyed by session ID plus an in-memory SHA-256 prompt digest, then reinjects the exact original prompt once.
 6. The second hook consumes that authorization. A legitimate later identical prompt is not authorized automatically.
 7. The allow response includes only a prompt-free `systemMessage` reporting applied or unchanged status. Official docs describe `systemMessage` as a user warning; it is not `additionalContext`.
 
 Wrong/stale tokens, oversized messages, IPC timeout, coordinator failure, expired authorization, concurrent sessions, legitimate repeats, Unicode/multiline fidelity, reinjection failure, and cancellation before routing are covered by local tests. During the routing window the input relay pauses stdin instead of interpreting it; queued permission/paste/Unicode/cancellation bytes resume unchanged.
+
+### Host-synthetic task-notification turns
+
+When a background agent finishes, the host injects a synthetic `<task-notification>…</task-notification>` turn and fires `UserPromptSubmit` for it exactly as for a human prompt. Binary inspection of 2.1.241 (2026-08-23) confirmed the hook input carries no `is_synthetic`, `prompt_source`, or `origin` field — the CLI tracks `promptSource`, `wakeupSource`, and `isSynthetic` internally, but the hook-input builder compiles the extra fields out — so the only local detection is content-based: the coordinator passes through, silently and unclassified, any prompt that starts with `<task-notification>` and contains the closing tag (cause `agent-notification-passthrough`, issue #15). Like the model-tracking and `/effort` acknowledgement observers above, this depends on an observed host format and must be re-verified when the installed CLI version changes: if a future build alters the envelope, the check misses and those turns revert to the classify/block/replay path (degraded UX, never breakage).
 
 ### Model tracking
 

@@ -18,7 +18,7 @@
 | [`src/core/learned-classifier.js`](../src/core/learned-classifier.js) | Learned classifier with the classifyEnvelope contract and deterministic fallback chain; installed-artifact loader |
 | [`scripts/train-ordinal-head.mjs`](../scripts/train-ordinal-head.mjs) | CLI trainer (`npm run ml:train`) from JSONL features/prompts to a versioned artifact |
 | [`src/broker/turn-controller.js`](../src/broker/turn-controller.js) | User override precedence, fail-open causes, autopilot-wins uncertainty floor, acknowledgement, exact-once forwarding, prompt-free status |
-| [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, session/model state incl. standing-manual tracking and post-applied level refresh |
+| [`src/broker/hybrid-coordinator.js`](../src/broker/hybrid-coordinator.js) | First-hook block tickets, routing, replay arming, silent task-notification passthrough, session/model state incl. standing-manual tracking and post-applied level refresh |
 | [`src/broker/replay-authorizations.js`](../src/broker/replay-authorizations.js) | Expiring session-bound prompt-digest authorizations, held only in memory and consumed once |
 | [`src/broker/ipc.js`](../src/broker/ipc.js) | Random authenticated Windows named-pipe/Unix-socket bridge with bounded messages; short socket basenames with an explicit `sun_path` length guard and close-on-error after listen |
 | [`src/broker/hook-client.js`](../src/broker/hook-client.js) | Claude hook JSON adapter and visible no-change fail-open warning |
@@ -89,7 +89,7 @@
 | --- | --- |
 | [`test/broker-turn.test.js`](../test/broker-turn.test.js) | Applied/unchanged outcomes, every fail-open cause, the uncertainty floor (applied, respected, met, clamped, unacknowledged), override precedence, timeout, exact-once, privacy |
 | [`test/broker-pty.test.js`](../test/broker-pty.test.js) | Synthetic ConPTY command acknowledgement and forward ordering |
-| [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens, floor routing and standing-manual state |
+| [`test/hybrid-broker.test.js`](../test/hybrid-broker.test.js) | One-use replay, Unicode/multiline fidelity, repeats, sessions, races, cancellation, stale tokens, floor routing, standing-manual state, and agent-notification passthrough |
 | [`test/broker-ipc.test.js`](../test/broker-ipc.test.js) | Token-authenticated local IPC, fail-open, prompt-free hook status, the `sun_path` endpoint-length guard, and close-on-error after listen |
 | [`test/broker-setup-failopen.test.js`](../test/broker-setup-failopen.test.js) | Setup and PTY-spawn failures degrade to an unchanged Claude launch: original arguments, visible prompt-free causes, artifact cleanup, directly-attached fallback (ComSpec quoting, signal exit codes, async spawn errors), hard preconditions preserved |
 | [`test/pty-preflight.test.js`](../test/pty-preflight.test.js) | Spawn-helper execute-bit repair: read-mirrored modes, every candidate location, never-throw contract (issue #26 regression guard) |

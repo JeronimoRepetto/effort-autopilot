@@ -123,6 +123,65 @@ test("explicit user effort allows the prompt directly without block or replay", 
   assert.equal(coordinator.authorizations.size, 0);
 });
 
+const AGENT_NOTIFICATION =
+  "<task-notification>Background agent finished: long technical report with dense detail.</task-notification>";
+
+test("host-synthetic task-notification passes through silently without block or replay", () => {
+  const coordinator = registeredCoordinator();
+  const decision = coordinator.handleUserPromptSubmit({
+    sessionId: SESSION,
+    prompt: AGENT_NOTIFICATION,
+  });
+  assert.equal(decision.action, "allow");
+  assert.equal(decision.authorizedReplay, false);
+  assert.equal(decision.agentNotification, true);
+  assert.equal(decision.cause, "agent-notification-passthrough");
+  assert.equal(decision.systemMessage, undefined);
+  assert.equal(coordinator.pending.size, 0);
+  assert.equal(coordinator.authorizations.size, 0);
+});
+
+test("near-miss prompts mentioning task-notification still classify normally", () => {
+  const nearMisses = [
+    "Explain what a <task-notification>...</task-notification> turn is.",
+    "  <task-notification>leading whitespace breaks the anchor</task-notification>",
+    "<task-notification>opening tag without a closing tag",
+  ];
+  for (const prompt of nearMisses) {
+    const coordinator = registeredCoordinator();
+    const decision = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt });
+    assert.equal(decision.action, "block", `expected block for: ${prompt.slice(0, 40)}`);
+    assert.ok(decision.ticketId);
+    coordinator.cancelTicket(decision.ticketId);
+  }
+});
+
+test("task-notification passes through even while a ticket is pending (busy session)", () => {
+  const coordinator = registeredCoordinator();
+  const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });
+  assert.equal(first.action, "block");
+  const decision = coordinator.handleUserPromptSubmit({
+    sessionId: SESSION,
+    prompt: AGENT_NOTIFICATION,
+  });
+  assert.equal(decision.action, "allow");
+  assert.equal(decision.agentNotification, true);
+  coordinator.cancelTicket(first.ticketId);
+});
+
+test("task-notification passthrough wins over explicit user effort and stays silent", () => {
+  const coordinator = registeredCoordinator();
+  coordinator.updateUserEffort(SESSION, "high");
+  const decision = coordinator.handleUserPromptSubmit({
+    sessionId: SESSION,
+    prompt: AGENT_NOTIFICATION,
+  });
+  assert.equal(decision.action, "allow");
+  assert.equal(decision.agentNotification, true);
+  assert.equal(decision.explicitUserEffort, undefined);
+  assert.equal(decision.systemMessage, undefined);
+});
+
 test("user effort set after a block still wins during routing, and auto re-enables automation", async () => {
   const coordinator = registeredCoordinator();
   const first = coordinator.handleUserPromptSubmit({ sessionId: SESSION, prompt: PROMPT });

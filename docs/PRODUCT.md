@@ -35,6 +35,8 @@ top-level submission identified
 
 No preliminary model call is allowed. Provider/model cannot change.
 
+Effort is chosen per **user** prompt. A host-synthetic `<task-notification>…</task-notification>` turn (Claude Code waking the session when a background agent finishes) is an agent's report, not user intent: the broker passes it through silently and unclassified — never blocked, never classified, never replayed — with the prompt-free cause `agent-notification-passthrough` available in the IPC decision (issue #15). The match is anchored to the exact envelope (prompt starts with the opening tag and contains the closing tag); a prompt merely mentioning the tag classifies normally, and if the host ever changes the envelope format the check misses and the turn falls back to normal classification.
+
 ## Fail-open contract
 
 An explicit user effort choice has precedence under `manual-wins`; under `autopilot-wins` a manual choice stands only against the uncertainty floor. The broker leaves effort unchanged and forwards once when any of these applies:

@@ -31,7 +31,7 @@ The broker never changes provider/model and never sends a classification request
 | `src/core` classifier/profiles | Implemented, deterministic bootstrap |
 | `src/core` effort ladder/vocabulary/plan (`effort-ladder.js`, `host-effort-vocabulary.js`, `execution-plan.js`) | Implemented: single canonical ladder, per-host vocabulary as data (Claude Code only), pre-call plan resolution |
 | `src/broker/turn-controller.js` | Implemented fail-open/exact-once contract, incl. the autopilot-wins uncertainty floor |
-| `src/broker/hybrid-coordinator.js` | Hook block, ticket routing, one-use replay implemented |
+| `src/broker/hybrid-coordinator.js` | Hook block, ticket routing, one-use replay, silent task-notification passthrough implemented |
 | `src/broker/ipc.js` / `hook-client.js` | Authenticated local named-pipe/Unix-socket hook bridge implemented, with an explicit `sun_path` length guard and close-on-error after listen |
 | `src/broker/pty-session.js` | Windows ConPTY transport and ANSI-normalized acknowledgement implemented |
 | `src/broker/interactive.js` setup fail-open | Implemented: any broker setup failure cleans up and degrades to an unchanged Claude launch (`broker-setup-failed`) |

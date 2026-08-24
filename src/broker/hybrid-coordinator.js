@@ -111,6 +111,19 @@ export class HybridBrokerCoordinator {
       });
     }
 
+    // A host-synthetic task-notification turn is an agent's report, not user
+    // intent (issue #15): pass it through silently and unclassified. The match
+    // is anchored to the exact envelope the host injects; if the host changes
+    // the format the check misses and behavior reverts to classify+replay.
+    if (prompt.startsWith("<task-notification>") && prompt.includes("</task-notification>")) {
+      return Object.freeze({
+        action: "allow",
+        authorizedReplay: false,
+        agentNotification: true,
+        cause: "agent-notification-passthrough",
+      });
+    }
+
     const messages = brokerMessages(prompt);
 
     // An explicit user effort never needs routing: the session keeps the
