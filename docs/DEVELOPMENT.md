@@ -9,6 +9,7 @@ Set-Location <path-to-your-clone>\effort-autopilot
 npm install
 npm test
 npm run broker:poc:test
+npm run skills:check
 ```
 
 Line endings are pinned by `.gitattributes` (LF for source/docs, CRLF only for PowerShell), so checkouts match Prettier's `endOfLine: "lf"` on every platform regardless of `core.autocrlf` — `npm run format:check` passes on a fresh clone.
@@ -36,7 +37,7 @@ npm test
 npm run broker:poc:test
 ```
 
-The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, the spawn-helper execute-bit preflight with the directly-attached PTY fallback, and internal benchmark regressions.
+The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, development Agent Skill metadata and synchronization, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, the spawn-helper execute-bit preflight with the directly-attached PTY fallback, and internal benchmark regressions.
 
 Plugin validation is optional historical scaffolding and does not prove broker behavior:
 
@@ -61,14 +62,17 @@ After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` 
 
 ## Change workflow
 
+Repository agents use [`AGENTS.md`](../AGENTS.md) as their provider-neutral source of truth. Claude Code enters through [`CLAUDE.md`](../CLAUDE.md), which imports the canonical guide. Development skills and their metadata workflow are documented in [Development agent harness](AGENT_HARNESS.md).
+
 1. Keep host-neutral logic under `src/core`.
 2. Keep product broker logic under `src/broker`, the guarded proof under `scripts`, and gateway research under `src/gateway`.
 3. Keep `src/launcher`, `src/adapters/claude-cli`, legacy `src/cli`, and pilot bins internal-only. Packaged code (`src/broker`, `src/core`, `src/installer`, the shipped `bin/` entrypoints) must never import from those internal directories — they are excluded from the npm tarball, and `test/packaging.test.js` enforces that every shipped import resolves inside it (regression guard for issue #13).
 4. The only permitted persistent install surface is the reversible installer (`bin/effort-autopilot-cli.js` + `src/installer/`): explicit consent, exact backups, surgical uninstall, never overwriting or renaming the real `claude`. Never add a Claude settings mutation, gateway listener, or unreviewed live proof.
 5. Preserve prompt-free metadata and add failure/privacy/exact-once tests.
 6. Update the feasibility audit and module map, run tests, and inspect git status.
-7. **Document immediately after every change** — documentation updates are part of the change itself, never deferred (see `CLAUDE.md`, Rule 1A).
-8. **Mandatory pre-commit/pre-push audit gate** (see `CLAUDE.md`, Rule 1B): before committing or pushing behavior changes, launch a subagent to sweep `README.md` + all of `docs/` for claims made stale by the change, personally review its findings, and land the fixes in the same commit. This safeguard is obligatory.
+7. **Document immediately after every change** — documentation updates are part of the change itself, never deferred (see `AGENTS.md`).
+8. **Mandatory pre-commit/pre-push audit gate** (see `AGENTS.md`): before committing or pushing behavior changes, launch a subagent to sweep `README.md` + all of `docs/` for claims made stale by the change, personally review its findings, and land the fixes in the same commit. This safeguard is obligatory.
+9. After creating or changing a development skill, run `npm run skills:sync` and `npm run skills:check`.
 
 Do not commit `.effort-autopilot/`, `node_modules/`, logs, benchmark payloads, prompt files, or private output.
 
