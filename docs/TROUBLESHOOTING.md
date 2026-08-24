@@ -47,6 +47,10 @@ Note that `pnpm rebuild node-pty` does NOT fix this: node-pty's install script s
 
 node-pty could not spawn at all (missing or unloadable native binding, a helper the automatic repair could not fix). The broker degraded to its last-resort mode: Claude attached directly to your real terminal — fully usable, prompt untouched, but with no automatic effort for that launch. The parenthesized cause is prompt-free; it may include local file paths, so redact your username before sharing. Fix the underlying node-pty install (see the `posix_spawnp` entry above, or reinstall dependencies) to get the broker back.
 
+## A background agent's report was classified / echoed as "Original prompt:"
+
+Fixed (issue #15): when a background agent finishes, Claude Code injects a synthetic `<task-notification>…</task-notification>` turn that fires `UserPromptSubmit` like a human prompt. The broker now recognizes the envelope (prompt starts with `<task-notification>` and contains the closing tag) and lets the turn pass through silently — never classified, blocked, or replayed — with the prompt-free cause `agent-notification-passthrough` in the IPC decision. Detection is content-based because the installed CLI (verified on 2.1.241) exposes no synthetic-origin field to hooks; if a future CLI version changes the envelope format, those turns fall back to normal classification (noisy but harmless) until the check is updated. Prompts that merely mention the tag mid-text still classify normally.
+
 ## The broker raised my effort to high and I didn't ask
 
 That is the `autopilot-wins` uncertainty floor, not an error: when classification is uncertain and no manual `/effort` choice is standing and the level is below `high`, the broker applies `high` and reports `applied` with `uncertainty-floor-acknowledged`. To keep your own level, type `/effort <level>` (it stands until an applied automatic turn or `/effort auto`), or switch back to the default policy with `node bin/effort-autopilot-cli.js policy manual-wins`.
