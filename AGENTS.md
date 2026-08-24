@@ -89,4 +89,4 @@ npm run skills:check
 
 The installed-CLI diagnostic is separate from normal tests and must remain zero-inference guarded. Tripwires in `test/packaging.test.js`, `test/documentation.test.js`, and `test/privacy.test.js` deliberately encode product boundaries.
 
-Use Node.js 20+, ES modules, Prettier, and ESLint. Keep host-neutral logic under `src/core`, product broker logic under `src/broker`, installer behavior under `src/installer`, and user-facing broker messages in `src/broker/messages.js`. Treat everything under `.effort-autopilot/` as ignored local state.
+Use Node.js 20.11+, ES modules, Prettier, and ESLint. Keep host-neutral logic under `src/core`, product broker logic under `src/broker`, installer behavior under `src/installer`, and user-facing broker messages in `src/broker/messages.js`. Treat everything under `.effort-autopilot/` as ignored local state.
