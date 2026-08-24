@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 
 import {
   parseSkillSource,
+  PROVIDER_SKILL_ROOTS,
   renderAutoInvokeSection,
+  renderProviderSkillIndex,
   replaceGeneratedSection,
   syncAgentSkills,
 } from "../agent-skills/skill-sync/scripts/sync.mjs";
@@ -81,6 +83,20 @@ Footer
   assert.doesNotMatch(replaced, /\nold\n/);
 });
 
+test("provider skill indexes preserve discovery metadata and redirect to one canonical source", () => {
+  const skill = parseSkillSource(fixtureSkill(), "mock-skill");
+  const index = renderProviderSkillIndex(skill, "../../../agent-skills/mock-skill/SKILL.md");
+  assert.match(index, /^---\nname: mock-skill\ndescription: >/);
+  assert.match(index, /\.\.\/\.\.\/\.\.\/agent-skills\/mock-skill\/SKILL\.md/);
+  assert.match(index, /only editable source of truth/);
+  assert.doesNotMatch(index, /## Mock/);
+  assert.deepEqual(PROVIDER_SKILL_ROOTS, {
+    codex: ".agents/skills",
+    claude: ".claude/skills",
+    gemini: ".gemini/skills",
+  });
+});
+
 test("all repository Agent Skills use the maintained Effort Autopilot metadata", async () => {
   const skillsRoot = path.join(root, "agent-skills");
   const entries = await readdir(skillsRoot, { withFileTypes: true });
@@ -118,14 +134,19 @@ test("all repository Agent Skills use the maintained Effort Autopilot metadata",
   ]);
 });
 
-test("CLAUDE.md imports the canonical AGENTS.md rules", async () => {
+test("provider entrypoints import the canonical AGENTS.md rules", async () => {
   const agents = await readFile(path.join(root, "AGENTS.md"), "utf8");
   const claude = await readFile(path.join(root, "CLAUDE.md"), "utf8");
+  const gemini = await readFile(path.join(root, "GEMINI.md"), "utf8");
   assert.match(claude, /^# Claude Code entrypoint/m);
   assert.match(claude, /^@AGENTS\.md$/m);
+  assert.match(gemini, /^# Gemini CLI entrypoint/m);
+  assert.match(gemini, /^@\.\/AGENTS\.md$/m);
   assert.doesNotMatch(agents, /follow the rules in \[CLAUDE\.md\]/i);
   for (const contract of ["zero model tokens", "byte-for-byte exactly once", "GitHub Issues"]) {
     assert.match(agents, new RegExp(contract, "i"));
+    assert.doesNotMatch(claude, new RegExp(contract, "i"));
+    assert.doesNotMatch(gemini, new RegExp(contract, "i"));
   }
 });
 
@@ -146,15 +167,41 @@ stale
 `;
     const agentsPath = path.join(temporaryRoot, "AGENTS.md");
     await writeFile(agentsPath, initialAgents, "utf8");
+    const indexPaths = Object.values(PROVIDER_SKILL_ROOTS).map((skillRoot) =>
+      path.join(temporaryRoot, skillRoot, "mock-skill", "SKILL.md"),
+    );
+    const expectedChanges = [agentsPath, ...indexPaths];
 
     const dryRun = await syncAgentSkills({ root: temporaryRoot, dryRun: true });
-    assert.deepEqual(dryRun.changes, [agentsPath]);
+    assert.deepEqual(dryRun.changes, expectedChanges);
     assert.equal(await readFile(agentsPath, "utf8"), initialAgents);
+    for (const skillRoot of Object.values(PROVIDER_SKILL_ROOTS)) {
+      await assert.rejects(stat(path.join(temporaryRoot, skillRoot)), { code: "ENOENT" });
+    }
+
+    const unrelatedPath = path.join(
+      temporaryRoot,
+      PROVIDER_SKILL_ROOTS.codex,
+      "local-only",
+      "NOTES.md",
+    );
+    await mkdir(path.dirname(unrelatedPath), { recursive: true });
+    await writeFile(unrelatedPath, "preserve me\n", "utf8");
 
     const written = await syncAgentSkills({ root: temporaryRoot });
-    assert.deepEqual(written.changes, [agentsPath]);
+    assert.deepEqual(written.changes, expectedChanges);
+    assert.equal(await readFile(unrelatedPath, "utf8"), "preserve me\n");
+    for (const indexPath of indexPaths) {
+      const source = await readFile(indexPath, "utf8");
+      assert.match(source, /agent-skills\/mock-skill\/SKILL\.md/);
+      assert.doesNotMatch(source, /## Mock/);
+    }
     const checked = await syncAgentSkills({ root: temporaryRoot, check: true });
     assert.deepEqual(checked.changes, []);
+
+    await writeFile(indexPaths[1], "stale\n", "utf8");
+    const drift = await syncAgentSkills({ root: temporaryRoot, check: true });
+    assert.deepEqual(drift.changes, [indexPaths[1]]);
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }

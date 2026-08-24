@@ -37,7 +37,7 @@ npm test
 npm run broker:poc:test
 ```
 
-The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, development Agent Skill metadata and synchronization, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, the spawn-helper execute-bit preflight with the directly-attached PTY fallback, and internal benchmark regressions.
+The suite covers classifier tiers/boundaries, multilingual features, model profiles, malformed input, privacy, broker acknowledgement/order, user override precedence, every fail-open cause, the autopilot-wins uncertainty floor, exact-once forwarding, synthetic ConPTY, gateway effort-only mutation/streaming, the canonical effort ladder and host vocabulary mapping, development Agent Skill metadata, synchronization, and provider discovery indexes, packaging tripwires (shipped imports resolve inside the npm tarball, single ladder definition, plugin/package version sync), broker-startup fail-open with the IPC endpoint length guard, platform-exact path derivation in the install/locator helpers, the spawn-helper execute-bit preflight with the directly-attached PTY fallback, and internal benchmark regressions.
 
 Plugin validation is optional historical scaffolding and does not prove broker behavior:
 
@@ -62,7 +62,7 @@ After the zero-inference diagnostic is green, `scripts/start-isolated-test.ps1` 
 
 ## Change workflow
 
-Repository agents use [`AGENTS.md`](../AGENTS.md) as their provider-neutral source of truth. Claude Code enters through [`CLAUDE.md`](../CLAUDE.md), which imports the canonical guide. Development skills and their metadata workflow are documented in [Development agent harness](AGENT_HARNESS.md).
+Repository agents use [`AGENTS.md`](../AGENTS.md) as their provider-neutral source of truth. Claude Code and Gemini CLI enter through [`CLAUDE.md`](../CLAUDE.md) and [`GEMINI.md`](../GEMINI.md), which import the canonical guide. Provider-native skill indexes under `.agents/skills/`, `.claude/skills/`, and `.gemini/skills/` redirect to the only editable skill bodies under `agent-skills/`. The complete workflow is documented in [Development agent harness](AGENT_HARNESS.md).
 
 1. Keep host-neutral logic under `src/core`.
 2. Keep product broker logic under `src/broker`, the guarded proof under `scripts`, and gateway research under `src/gateway`.
@@ -72,7 +72,7 @@ Repository agents use [`AGENTS.md`](../AGENTS.md) as their provider-neutral sour
 6. Update the feasibility audit and module map, run tests, and inspect git status.
 7. **Document immediately after every change** — documentation updates are part of the change itself, never deferred (see `AGENTS.md`).
 8. **Mandatory pre-commit/pre-push audit gate** (see `AGENTS.md`): before committing or pushing behavior changes, launch a subagent to sweep `README.md` + all of `docs/` for claims made stale by the change, personally review its findings, and land the fixes in the same commit. This safeguard is obligatory.
-9. After creating or changing a development skill, run `npm run skills:sync` and `npm run skills:check`.
+9. After creating or changing a canonical development skill, run `npm run skills:sync`, inspect the generated provider indexes, and run `npm run skills:check`.
 
 Do not commit `.effort-autopilot/`, `node_modules/`, logs, benchmark payloads, prompt files, or private output.
 
